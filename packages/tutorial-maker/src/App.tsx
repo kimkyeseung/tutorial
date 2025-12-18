@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import ModeSelectionPage from './pages/ModeSelectionPage'
 import BuilderPage from './pages/BuilderPage'
-import ViewerPage from './pages/ViewerPage'
+import ModeSelectionPage from './pages/ModeSelectionPage'
 import ProductPage from './pages/ProductPage'
+import ViewerPage from './pages/ViewerPage'
 import { addRecentFile } from './utils/recentFiles'
 
 type AppMode = 'maker' | 'viewer' | null
@@ -88,10 +88,10 @@ function App() {
     // 미리보기 중
     if (showPreview && previewProjectId) {
       return (
-        <div className="relative">
+        <div className='relative'>
           <button
             onClick={handleBackFromPreview}
-            className="absolute left-4 top-4 z-50 rounded-lg bg-red-600 px-4 py-2 text-white shadow-lg hover:bg-red-700"
+            className='absolute left-4 top-4 z-50 rounded-lg bg-red-600 px-4 py-2 text-white shadow-lg hover:bg-red-700'
           >
             ← 빌더로 돌아가기
           </button>
@@ -111,10 +111,7 @@ function App() {
 
   // 뷰어 모드
   return (
-    <ViewerPage
-      filePath={tutorialFilePath}
-      onFileSelect={handleFileSelect}
-    />
+    <ViewerPage filePath={tutorialFilePath} onFileSelect={handleFileSelect} />
   )
 }
 

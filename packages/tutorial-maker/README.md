@@ -46,13 +46,13 @@ Tutorial Maker는 비디오/이미지 기반의 인터렉티브 튜토리얼을 
 
 ### 기술 스택
 
-| 영역 | 기술 | 선택 이유 |
-|------|------|----------|
-| Frontend | React 19 + TypeScript | 컴포넌트 기반 UI, 타입 안정성 |
-| Styling | Tailwind CSS | 빠른 UI 개발, 일관된 디자인 시스템 |
-| Desktop | Tauri 2.0 (Rust) | 경량 번들 크기, 네이티브 성능 |
-| Storage | IndexedDB | 대용량 미디어 클라이언트 저장 |
-| Build | Vite | 빠른 HMR, 최적화된 프로덕션 빌드 |
+| 영역     | 기술                  | 선택 이유                          |
+| -------- | --------------------- | ---------------------------------- |
+| Frontend | React 19 + TypeScript | 컴포넌트 기반 UI, 타입 안정성      |
+| Styling  | Tailwind CSS          | 빠른 UI 개발, 일관된 디자인 시스템 |
+| Desktop  | Tauri 2.0 (Rust)      | 경량 번들 크기, 네이티브 성능      |
+| Storage  | IndexedDB             | 대용량 미디어 클라이언트 저장      |
+| Build    | Vite                  | 빠른 HMR, 최적화된 프로덕션 빌드   |
 
 ---
 
@@ -87,6 +87,7 @@ struct BuildManifest {
 ```
 
 이 방식으로:
+
 - 별도 설치 과정 없이 exe 하나로 배포
 - 미디어 파일 유실 위험 제거
 - 오프라인 환경에서 완전한 동작
@@ -95,16 +96,16 @@ struct BuildManifest {
 
 ```typescript
 // 재생 타입에 따른 동작
-type PlayType = 'loop' | 'single';
+type PlayType = 'loop' | 'single'
 
 // loop: 무한 반복, 버튼/터치로만 이동
 // single: N회 재생 후 자동으로 다음 페이지
 
 // 네비게이션 액션
 type NavigationAction = {
-  type: 'next' | 'goto';
-  targetPageId?: string;  // goto 시 대상 페이지
-};
+  type: 'next' | 'goto'
+  targetPageId?: string // goto 시 대상 페이지
+}
 ```
 
 페이지 간 이동은 선형(next)과 비선형(goto) 모두 지원하여 복잡한 분기 구조도 구현 가능합니다.
@@ -114,21 +115,21 @@ type NavigationAction = {
 ```typescript
 // usePageNavigation.ts
 const connectedPageIds = useMemo(() => {
-  const ids = new Set<string>();
+  const ids = new Set<string>()
 
   // 다음 페이지
-  if (nextPage) ids.add(nextPage.id);
+  if (nextPage) ids.add(nextPage.id)
 
   // 버튼/터치로 연결된 모든 페이지
-  currentPage.buttons.forEach(btn => {
-    if (btn.action.targetPageId) ids.add(btn.action.targetPageId);
-  });
-  currentPage.touchAreas.forEach(area => {
-    if (area.action.targetPageId) ids.add(area.action.targetPageId);
-  });
+  currentPage.buttons.forEach((btn) => {
+    if (btn.action.targetPageId) ids.add(btn.action.targetPageId)
+  })
+  currentPage.touchAreas.forEach((area) => {
+    if (area.action.targetPageId) ids.add(area.action.targetPageId)
+  })
 
-  return ids;
-}, [currentPage, nextPage]);
+  return ids
+}, [currentPage, nextPage])
 ```
 
 현재 페이지에서 이동 가능한 모든 페이지를 미리 로드하여 끊김 없는 전환을 구현했습니다.
@@ -139,8 +140,8 @@ const connectedPageIds = useMemo(() => {
 
 ```typescript
 interface PageButton {
-  position: { x: number; y: number };  // 0-100%
-  size: { width: number; height: number };  // 0-100%
+  position: { x: number; y: number } // 0-100%
+  size: { width: number; height: number } // 0-100%
 }
 ```
 
@@ -191,30 +192,30 @@ tutorial-maker/
 
 ```typescript
 interface Project {
-  id: string;
-  name: string;
-  pages: Page[];
-  settings: ProjectSettings;
+  id: string
+  name: string
+  pages: Page[]
+  settings: ProjectSettings
 }
 
 interface Page {
-  id: string;
-  order: number;
-  mediaType: 'video' | 'image';
-  mediaId: string;              // IndexedDB blob ID
-  playType: 'loop' | 'single';
-  playCount?: number;           // single 모드 재생 횟수
-  buttons: PageButton[];
-  touchAreas: TouchArea[];
+  id: string
+  order: number
+  mediaType: 'video' | 'image'
+  mediaId: string // IndexedDB blob ID
+  playType: 'loop' | 'single'
+  playCount?: number // single 모드 재생 횟수
+  buttons: PageButton[]
+  touchAreas: TouchArea[]
 }
 
 interface ProjectSettings {
-  windowWidth: number;
-  windowHeight: number;
-  fullscreen: boolean;
-  exitKey?: string;
-  showProgress: boolean;
-  loopAtEnd: boolean;
+  windowWidth: number
+  windowHeight: number
+  fullscreen: boolean
+  exitKey?: string
+  showProgress: boolean
+  loopAtEnd: boolean
 }
 ```
 
@@ -252,12 +253,12 @@ npm run tauri:build
 // VideoPlayer.tsx
 const playVideo = async () => {
   try {
-    await videoRef.current.play();
+    await videoRef.current.play()
   } catch (error) {
     // 자동재생 차단 시 사용자 인터랙션 후 재시도
-    setNeedsInteraction(true);
+    setNeedsInteraction(true)
   }
-};
+}
 ```
 
 ### 페이지 유효성 검사
@@ -279,12 +280,12 @@ const playVideo = async () => {
 // useProductProject.ts
 const loadProject = async () => {
   // V2 매니페스트 시도
-  const manifest = await invoke('get_media_manifest');
-  if (manifest) return loadV2Project();
+  const manifest = await invoke('get_media_manifest')
+  if (manifest) return loadV2Project()
 
   // V1 폴백
-  return loadV1Project();
-};
+  return loadV1Project()
+}
 ```
 
 ---

@@ -28,7 +28,8 @@ const EntryPage: React.FC<EntryPageProps> = ({ projectName, onStart }) => {
     }
 
     document.addEventListener('fullscreenchange', handleFullscreenChange)
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    return () =>
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
   }, [])
 
   const handleToggleFullscreen = (e: React.MouseEvent) => {

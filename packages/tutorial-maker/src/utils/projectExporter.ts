@@ -81,7 +81,10 @@ export const exportProjectAsZip = async (project: Project): Promise<Blob> => {
   return await zip.generateAsync({ type: 'blob' })
 }
 
-export const downloadFile = async (blob: Blob, filename: string): Promise<boolean> => {
+export const downloadFile = async (
+  blob: Blob,
+  filename: string
+): Promise<boolean> => {
   // Tauri 환경인지 확인
   if ('__TAURI_INTERNALS__' in window) {
     try {

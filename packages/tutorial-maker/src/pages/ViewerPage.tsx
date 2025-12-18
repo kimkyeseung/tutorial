@@ -1,10 +1,15 @@
 import React, { useCallback } from 'react'
-import { ProductPageContent } from './ProductPage'
-import LoadingScreen from '../components/product/LoadingScreen'
-import ErrorScreen from '../components/product/ErrorScreen'
 import Footer from '../components/common/Footer'
+import ErrorScreen from '../components/product/ErrorScreen'
+import LoadingScreen from '../components/product/LoadingScreen'
 import { useTutorialViewer } from '../hooks/useTutorialViewer'
-import { getRecentFiles, addRecentFile, removeRecentFile, type RecentFile } from '../utils/recentFiles'
+import {
+  getRecentFiles,
+  addRecentFile,
+  removeRecentFile,
+  type RecentFile,
+} from '../utils/recentFiles'
+import { ProductPageContent } from './ProductPage'
 
 interface ViewerPageProps {
   filePath: string | null
@@ -34,9 +39,7 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
     try {
       const { open } = await import('@tauri-apps/plugin-dialog')
       const selected = await open({
-        filters: [
-          { name: 'Tutorial', extensions: ['tutorial', 'zip'] }
-        ],
+        filters: [{ name: 'Tutorial', extensions: ['tutorial', 'zip'] }],
         multiple: false,
       })
 
@@ -52,51 +55,59 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
   }, [onFileSelect])
 
   // 최근 파일 클릭
-  const handleRecentFileClick = useCallback((file: RecentFile) => {
-    onFileSelect(file.path)
-  }, [onFileSelect])
+  const handleRecentFileClick = useCallback(
+    (file: RecentFile) => {
+      onFileSelect(file.path)
+    },
+    [onFileSelect]
+  )
 
   // 최근 파일 삭제
-  const handleRemoveRecentFile = useCallback((path: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    removeRecentFile(path)
-    setRecentFiles(getRecentFiles())
-  }, [])
+  const handleRemoveRecentFile = useCallback(
+    (path: string, e: React.MouseEvent) => {
+      e.stopPropagation()
+      removeRecentFile(path)
+      setRecentFiles(getRecentFiles())
+    },
+    []
+  )
 
   // 파일이 선택되지 않은 상태 - 파일 선택 UI
   if (!filePath) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white">
-        <h1 className="mb-8 text-3xl font-bold">튜토리얼 뷰어</h1>
+      <div className='flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white'>
+        <h1 className='mb-8 text-3xl font-bold'>튜토리얼 뷰어</h1>
 
         <button
           onClick={handleOpenFile}
-          className="mb-8 rounded-lg bg-purple-600 px-8 py-4 text-lg font-semibold transition-colors hover:bg-purple-700"
+          className='mb-8 rounded-lg bg-purple-600 px-8 py-4 text-lg font-semibold transition-colors hover:bg-purple-700'
         >
           .tutorial 파일 열기
         </button>
 
         {/* 최근 파일 목록 */}
         {recentFiles.length > 0 && (
-          <div className="w-full max-w-md">
-            <h2 className="mb-4 text-center text-sm font-medium text-gray-400">
+          <div className='w-full max-w-md'>
+            <h2 className='mb-4 text-center text-sm font-medium text-gray-400'>
               최근 열어본 파일
             </h2>
-            <div className="space-y-2">
+            <div className='space-y-2'>
               {recentFiles.map((file) => (
                 <div
                   key={file.path}
                   onClick={() => handleRecentFileClick(file)}
-                  className="flex cursor-pointer items-center justify-between rounded-lg bg-gray-800 px-4 py-3 transition-colors hover:bg-gray-700"
+                  className='flex cursor-pointer items-center justify-between rounded-lg bg-gray-800 px-4 py-3 transition-colors hover:bg-gray-700'
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{file.name}</p>
-                    <p className="truncate text-xs text-gray-500">{file.path}</p>
+                  <div className='min-w-0 flex-1'>
+                    <p className='truncate font-medium'>{file.name}</p>
+                    <p className='truncate text-xs text-gray-500'>
+                      {file.path}
+                    </p>
                   </div>
                   <button
                     onClick={(e) => handleRemoveRecentFile(file.path, e)}
-                    className="ml-3 flex-shrink-0 rounded p-1 text-gray-500 transition-colors hover:bg-gray-600 hover:text-white"
-                    title="목록에서 제거"
+                    className='ml-3 flex-shrink-0 rounded p-1 text-gray-500 transition-colors hover:bg-gray-600 hover:text-white'
+                    title='목록에서 제거'
                   >
                     ✕
                   </button>
@@ -106,11 +117,11 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
           </div>
         )}
 
-        <p className="mt-12 text-xs text-gray-500">
+        <p className='mt-12 text-xs text-gray-500'>
           .tutorial 또는 .zip 파일을 열 수 있습니다
         </p>
 
-        <Footer className="mt-8" />
+        <Footer className='mt-8' />
       </div>
     )
   }
@@ -122,20 +133,15 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
 
   // 에러 발생
   if (error) {
-    return (
-      <ErrorScreen
-        title="파일을 열 수 없습니다"
-        message={error}
-      />
-    )
+    return <ErrorScreen title='파일을 열 수 없습니다' message={error} />
   }
 
   // 프로젝트 없음
   if (!project) {
     return (
       <ErrorScreen
-        title="프로젝트를 로드할 수 없습니다"
-        message="파일이 손상되었거나 올바른 형식이 아닙니다"
+        title='프로젝트를 로드할 수 없습니다'
+        message='파일이 손상되었거나 올바른 형식이 아닙니다'
       />
     )
   }

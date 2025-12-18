@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import VideoPlayer from '../components/product/VideoPlayer'
-import EntryPage from '../components/product/EntryPage'
-import ControlOverlay from '../components/product/ControlOverlay'
-import LoadingScreen from '../components/product/LoadingScreen'
-import ErrorScreen from '../components/product/ErrorScreen'
 import ConfirmDialog from '../components/common/ConfirmDialog'
-import { useProductProject } from '../hooks/useProductProject'
+import ControlOverlay from '../components/product/ControlOverlay'
+import EntryPage from '../components/product/EntryPage'
+import ErrorScreen from '../components/product/ErrorScreen'
+import LoadingScreen from '../components/product/LoadingScreen'
+import VideoPlayer from '../components/product/VideoPlayer'
 import { usePageNavigation } from '../hooks/usePageNavigation'
+import { useProductProject } from '../hooks/useProductProject'
 import type { Project } from '../types/project'
 
 // 프레젠테이션 전용 컴포넌트 (외부에서 데이터 주입)

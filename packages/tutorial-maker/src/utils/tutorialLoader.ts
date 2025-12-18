@@ -1,5 +1,9 @@
 import JSZip from 'jszip'
-import type { Project, TutorialManifest, LoadedTutorial } from '../types/project'
+import type {
+  Project,
+  TutorialManifest,
+  LoadedTutorial,
+} from '../types/project'
 
 // .tutorial 또는 .zip 파일을 로드하여 튜토리얼 데이터 반환
 export const loadTutorialFile = async (
@@ -38,7 +42,8 @@ export const loadTutorialFile = async (
       const blob = await file.async('blob')
       // 파일명에서 확장자 제거하여 mediaId 추출
       const fileName = path.replace('media/', '')
-      const mediaId = fileName.substring(0, fileName.lastIndexOf('.')) || fileName
+      const mediaId =
+        fileName.substring(0, fileName.lastIndexOf('.')) || fileName
       mediaBlobs[mediaId] = blob
     }
   }
@@ -49,7 +54,8 @@ export const loadTutorialFile = async (
     if (path.startsWith('buttons/') && !file.dir) {
       const blob = await file.async('blob')
       const fileName = path.replace('buttons/', '')
-      const buttonId = fileName.substring(0, fileName.lastIndexOf('.')) || fileName
+      const buttonId =
+        fileName.substring(0, fileName.lastIndexOf('.')) || fileName
       buttonBlobs[buttonId] = blob
     }
   }
@@ -130,7 +136,8 @@ export const loadTutorialFromFile = async (
     if (path.startsWith('media/') && !file.dir) {
       const blob = await file.async('blob')
       const fileName = path.replace('media/', '')
-      const mediaId = fileName.substring(0, fileName.lastIndexOf('.')) || fileName
+      const mediaId =
+        fileName.substring(0, fileName.lastIndexOf('.')) || fileName
       mediaBlobs[mediaId] = blob
     }
   }
@@ -141,7 +148,8 @@ export const loadTutorialFromFile = async (
     if (path.startsWith('buttons/') && !file.dir) {
       const blob = await file.async('blob')
       const fileName = path.replace('buttons/', '')
-      const buttonId = fileName.substring(0, fileName.lastIndexOf('.')) || fileName
+      const buttonId =
+        fileName.substring(0, fileName.lastIndexOf('.')) || fileName
       buttonBlobs[buttonId] = blob
     }
   }

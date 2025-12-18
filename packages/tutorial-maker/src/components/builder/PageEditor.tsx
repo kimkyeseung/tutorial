@@ -14,11 +14,7 @@ type PageEditorProps = {
   pages: Page[]
 }
 
-const PageEditor: React.FC<PageEditorProps> = ({
-  page,
-  onUpdate,
-  pages,
-}) => {
+const PageEditor: React.FC<PageEditorProps> = ({ page, onUpdate, pages }) => {
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
   const [mediaFileName, setMediaFileName] = useState<string | null>(null)
   const [showMediaUploader, setShowMediaUploader] = useState(false)
@@ -107,7 +103,12 @@ const PageEditor: React.FC<PageEditorProps> = ({
                 <input
                   type='radio'
                   checked={page.playType === 'single'}
-                  onChange={() => onUpdate({ playType: 'single', playCount: page.playCount || 1 })}
+                  onChange={() =>
+                    onUpdate({
+                      playType: 'single',
+                      playCount: page.playCount || 1,
+                    })
+                  }
                   className='mr-2'
                 />
                 <span className='text-sm'>반복 후 자동 이동</span>
@@ -126,7 +127,9 @@ const PageEditor: React.FC<PageEditorProps> = ({
                     min='1'
                     max='20'
                     value={page.playCount || 1}
-                    onChange={(e) => onUpdate({ playCount: parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      onUpdate({ playCount: parseInt(e.target.value) })
+                    }
                     className='h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200'
                   />
                   <input
@@ -135,14 +138,18 @@ const PageEditor: React.FC<PageEditorProps> = ({
                     max='20'
                     value={page.playCount || 1}
                     onChange={(e) => {
-                      const value = Math.min(20, Math.max(1, parseInt(e.target.value) || 1))
+                      const value = Math.min(
+                        20,
+                        Math.max(1, parseInt(e.target.value) || 1)
+                      )
                       onUpdate({ playCount: value })
                     }}
                     className='w-16 rounded border border-gray-300 px-2 py-1 text-center text-sm'
                   />
                 </div>
                 <p className='mt-1 text-xs text-gray-500'>
-                  영상이 {page.playCount || 1}회 재생된 후 다음 페이지로 이동합니다
+                  영상이 {page.playCount || 1}회 재생된 후 다음 페이지로
+                  이동합니다
                 </p>
               </div>
             )}
@@ -175,7 +182,10 @@ const PageEditor: React.FC<PageEditorProps> = ({
               </div>
               <div className='mt-2 flex items-center justify-between'>
                 {mediaFileName && (
-                  <span className='truncate text-sm text-gray-600' title={mediaFileName}>
+                  <span
+                    className='truncate text-sm text-gray-600'
+                    title={mediaFileName}
+                  >
                     {page.mediaType === 'video' ? '🎥' : '🖼️'} {mediaFileName}
                   </span>
                 )}
@@ -209,7 +219,9 @@ const PageEditor: React.FC<PageEditorProps> = ({
           buttons={page.buttons}
           touchAreas={page.touchAreas}
           onUpdateButtons={(buttons: PageButton[]) => onUpdate({ buttons })}
-          onUpdateTouchAreas={(touchAreas: TouchArea[]) => onUpdate({ touchAreas })}
+          onUpdateTouchAreas={(touchAreas: TouchArea[]) =>
+            onUpdate({ touchAreas })
+          }
           mediaUrl={mediaPreview}
           mediaType={page.mediaType}
           pages={pages}

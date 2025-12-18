@@ -32,9 +32,9 @@ function bytesToBlobUrl(bytes: Uint8Array, mimeType: string): string {
 export function useProductProject(projectId?: string) {
   const [project, setProject] = useState<Project | null>(null)
   const [mediaUrls, setMediaUrls] = useState<Record<string, string>>({})
-  const [buttonImageUrls, setButtonImageUrls] = useState<Record<string, string>>(
-    {}
-  )
+  const [buttonImageUrls, setButtonImageUrls] = useState<
+    Record<string, string>
+  >({})
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -160,7 +160,10 @@ export function useProductProject(projectId?: string) {
         // V1 방식: embeddedMedia 배열에서 Base64 디코딩
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const buildProject = JSON.parse(projectJson) as any
-        if (buildProject.embeddedMedia && Array.isArray(buildProject.embeddedMedia)) {
+        if (
+          buildProject.embeddedMedia &&
+          Array.isArray(buildProject.embeddedMedia)
+        ) {
           const urls: Record<string, string> = {}
           const btnUrls: Record<string, string> = {}
 

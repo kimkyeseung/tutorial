@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react'
+import FlowMap from '../components/builder/FlowMap'
 import PageEditor from '../components/builder/PageEditor'
 import PageList from '../components/builder/PageList'
-import FlowMap from '../components/builder/FlowMap'
 import ProjectSettings from '../components/builder/ProjectSettings'
 import ConfirmDialog from '../components/common/ConfirmDialog'
 import type { Project, Page } from '../types/project'
-import { getAllProjects, saveProject, deleteProject, getAppIcon, createBlobURL } from '../utils/mediaStorage'
+import {
+  getAllProjects,
+  saveProject,
+  deleteProject,
+  getAppIcon,
+  createBlobURL,
+} from '../utils/mediaStorage'
 import { validateAllPages } from '../utils/pageValidation'
-import { exportAsTutorial, exportProject, importProjectFromZip } from '../utils/projectExporter'
+import {
+  exportAsTutorial,
+  exportProject,
+  importProjectFromZip,
+} from '../utils/projectExporter'
 
 type View = 'list' | 'settings' | 'pages'
 type PagesViewMode = 'list' | 'flowmap'
@@ -17,7 +27,10 @@ interface BuilderPageProps {
   onBackToModeSelection?: () => void
 }
 
-const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelection }) => {
+const BuilderPage: React.FC<BuilderPageProps> = ({
+  onPreview,
+  onBackToModeSelection,
+}) => {
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [currentView, setCurrentView] = useState<View>('list')
@@ -153,7 +166,9 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelect
     try {
       // 페이지 유효성 검사
       if (selectedProject.pages.length === 0) {
-        alert('❌ 내보낼 수 없습니다.\n\n페이지가 없습니다. 최소 1개 이상의 페이지를 추가해주세요.')
+        alert(
+          '❌ 내보낼 수 없습니다.\n\n페이지가 없습니다. 최소 1개 이상의 페이지를 추가해주세요.'
+        )
         setIsExporting(false)
         return
       }
@@ -161,9 +176,14 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelect
       const validation = validateAllPages(selectedProject.pages)
       if (!validation.isValid) {
         const errorMessages = validation.invalidPages
-          .map(({ pageIndex, errors }) => `페이지 ${pageIndex + 1}: ${errors.join(', ')}`)
+          .map(
+            ({ pageIndex, errors }) =>
+              `페이지 ${pageIndex + 1}: ${errors.join(', ')}`
+          )
           .join('\n')
-        alert(`❌ 내보낼 수 없습니다.\n\n다음 페이지에 문제가 있습니다:\n${errorMessages}`)
+        alert(
+          `❌ 내보낼 수 없습니다.\n\n다음 페이지에 문제가 있습니다:\n${errorMessages}`
+        )
         setIsExporting(false)
         return
       }
@@ -183,10 +203,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelect
       }
     } catch (error) {
       console.error('Export failed:', error)
-      alert(
-        '❌ 내보내기에 실패했습니다.\n\n오류: ' +
-          (error as Error).message
-      )
+      alert('❌ 내보내기에 실패했습니다.\n\n오류: ' + (error as Error).message)
     } finally {
       setIsExporting(false)
     }
@@ -223,7 +240,9 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelect
     try {
       // 페이지 유효성 검사
       if (selectedProject.pages.length === 0) {
-        alert('❌ 내보낼 수 없습니다.\n\n페이지가 없습니다. 최소 1개 이상의 페이지를 추가해주세요.')
+        alert(
+          '❌ 내보낼 수 없습니다.\n\n페이지가 없습니다. 최소 1개 이상의 페이지를 추가해주세요.'
+        )
         setIsExporting(false)
         return
       }
@@ -231,9 +250,14 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelect
       const validation = validateAllPages(selectedProject.pages)
       if (!validation.isValid) {
         const errorMessages = validation.invalidPages
-          .map(({ pageIndex, errors }) => `페이지 ${pageIndex + 1}: ${errors.join(', ')}`)
+          .map(
+            ({ pageIndex, errors }) =>
+              `페이지 ${pageIndex + 1}: ${errors.join(', ')}`
+          )
           .join('\n')
-        alert(`❌ 내보낼 수 없습니다.\n\n다음 페이지에 문제가 있습니다:\n${errorMessages}`)
+        alert(
+          `❌ 내보낼 수 없습니다.\n\n다음 페이지에 문제가 있습니다:\n${errorMessages}`
+        )
         setIsExporting(false)
         return
       }
@@ -265,7 +289,9 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelect
     try {
       // 페이지 유효성 검사
       if (selectedProject.pages.length === 0) {
-        alert('❌ 빌드할 수 없습니다.\n\n페이지가 없습니다. 최소 1개 이상의 페이지를 추가해주세요.')
+        alert(
+          '❌ 빌드할 수 없습니다.\n\n페이지가 없습니다. 최소 1개 이상의 페이지를 추가해주세요.'
+        )
         setIsBuilding(false)
         return
       }
@@ -273,9 +299,14 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelect
       const validation = validateAllPages(selectedProject.pages)
       if (!validation.isValid) {
         const errorMessages = validation.invalidPages
-          .map(({ pageIndex, errors }) => `페이지 ${pageIndex + 1}: ${errors.join(', ')}`)
+          .map(
+            ({ pageIndex, errors }) =>
+              `페이지 ${pageIndex + 1}: ${errors.join(', ')}`
+          )
           .join('\n')
-        alert(`❌ 빌드할 수 없습니다.\n\n다음 페이지에 문제가 있습니다:\n${errorMessages}`)
+        alert(
+          `❌ 빌드할 수 없습니다.\n\n다음 페이지에 문제가 있습니다:\n${errorMessages}`
+        )
         setIsBuilding(false)
         return
       }
@@ -438,7 +469,9 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelect
       <ConfirmDialog
         isOpen={exportConfirm}
         title='튜토리얼 내보내기'
-        message={"프로젝트를 .tutorial 파일로 내보내시겠습니까?\n\n프로젝트 데이터와 모든 미디어 파일이 포함됩니다."}
+        message={
+          '프로젝트를 .tutorial 파일로 내보내시겠습니까?\n\n프로젝트 데이터와 모든 미디어 파일이 포함됩니다.'
+        }
         confirmText='내보내기'
         cancelText='취소'
         onConfirm={confirmExportAsTutorial}
@@ -450,7 +483,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelect
       <ConfirmDialog
         isOpen={unsavedChangesConfirm}
         title='저장되지 않은 변경사항'
-        message={"저장되지 않은 변경사항이 있습니다.\n저장하시겠습니까?"}
+        message={'저장되지 않은 변경사항이 있습니다.\n저장하시겠습니까?'}
         confirmText='저장'
         cancelText='저장 안 함'
         onConfirm={confirmSaveAndGoToPages}
@@ -472,7 +505,9 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelect
                   ← 홈
                 </button>
               )}
-              <h1 className='text-2xl font-bold text-gray-900'>Tutorial Maker</h1>
+              <h1 className='text-2xl font-bold text-gray-900'>
+                Tutorial Maker
+              </h1>
             </div>
             <div className='flex gap-2'>
               <button
@@ -555,13 +590,16 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview, onBackToModeSelect
                           <span>페이지 {project.pages.length}개</span>
                           <span>•</span>
                           <span>
-                            {new Date(project.updatedAt).toLocaleDateString('ko-KR', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            {new Date(project.updatedAt).toLocaleDateString(
+                              'ko-KR',
+                              {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              }
+                            )}
                           </span>
                         </div>
                       </div>

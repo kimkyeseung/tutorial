@@ -115,13 +115,23 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
   }
 
   // 버튼 업데이트
-  const handleButtonUpdate = (buttonId: string, updates: Partial<PageButton>) => {
-    onUpdateButtons(buttons.map((b) => (b.id === buttonId ? { ...b, ...updates } : b)))
+  const handleButtonUpdate = (
+    buttonId: string,
+    updates: Partial<PageButton>
+  ) => {
+    onUpdateButtons(
+      buttons.map((b) => (b.id === buttonId ? { ...b, ...updates } : b))
+    )
   }
 
   // 터치 영역 업데이트
-  const handleTouchAreaUpdate = (areaId: string, updates: Partial<TouchArea>) => {
-    onUpdateTouchAreas(touchAreas.map((a) => (a.id === areaId ? { ...a, ...updates } : a)))
+  const handleTouchAreaUpdate = (
+    areaId: string,
+    updates: Partial<TouchArea>
+  ) => {
+    onUpdateTouchAreas(
+      touchAreas.map((a) => (a.id === areaId ? { ...a, ...updates } : a))
+    )
   }
 
   // 버튼 드래그
@@ -148,7 +158,10 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
       handleButtonUpdate(buttonId, {
         position: {
           x: Math.max(0, Math.min(100 - button.size.width, startPosX + deltaX)),
-          y: Math.max(0, Math.min(100 - button.size.height, startPosY + deltaY)),
+          y: Math.max(
+            0,
+            Math.min(100 - button.size.height, startPosY + deltaY)
+          ),
         },
       })
     }
@@ -163,7 +176,10 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
   }
 
   // 버튼 리사이즈
-  const handleButtonResizeMouseDown = (buttonId: string, e: React.MouseEvent) => {
+  const handleButtonResizeMouseDown = (
+    buttonId: string,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation()
 
     const button = buttons.find((b) => b.id === buttonId)
@@ -236,7 +252,10 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
   }
 
   // 터치 영역 리사이즈
-  const handleTouchAreaResizeMouseDown = (areaId: string, e: React.MouseEvent) => {
+  const handleTouchAreaResizeMouseDown = (
+    areaId: string,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation()
 
     const area = touchAreas.find((a) => a.id === areaId)
@@ -271,12 +290,14 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
   }
 
   // 선택된 아이템 가져오기
-  const selectedButton = selectedItem?.type === 'button'
-    ? buttons.find((b) => b.id === selectedItem.id)
-    : null
-  const selectedTouchArea = selectedItem?.type === 'touchArea'
-    ? touchAreas.find((a) => a.id === selectedItem.id)
-    : null
+  const selectedButton =
+    selectedItem?.type === 'button'
+      ? buttons.find((b) => b.id === selectedItem.id)
+      : null
+  const selectedTouchArea =
+    selectedItem?.type === 'touchArea'
+      ? touchAreas.find((a) => a.id === selectedItem.id)
+      : null
 
   return (
     <div className='rounded-lg bg-white p-6 shadow'>
@@ -349,12 +370,15 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
                 터치
               </span>
             </div>
-            {selectedItem?.type === 'touchArea' && selectedItem.id === area.id && (
-              <div
-                onMouseDown={(e) => handleTouchAreaResizeMouseDown(area.id, e)}
-                className='absolute bottom-0 right-0 h-4 w-4 cursor-se-resize bg-purple-600'
-              />
-            )}
+            {selectedItem?.type === 'touchArea' &&
+              selectedItem.id === area.id && (
+                <div
+                  onMouseDown={(e) =>
+                    handleTouchAreaResizeMouseDown(area.id, e)
+                  }
+                  className='absolute bottom-0 right-0 h-4 w-4 cursor-se-resize bg-purple-600'
+                />
+              )}
           </div>
         ))}
 
@@ -385,12 +409,13 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
                 : undefined,
             }}
           >
-            {selectedItem?.type === 'button' && selectedItem.id === button.id && (
-              <div
-                onMouseDown={(e) => handleButtonResizeMouseDown(button.id, e)}
-                className='absolute bottom-0 right-0 h-4 w-4 cursor-se-resize bg-blue-500'
-              />
-            )}
+            {selectedItem?.type === 'button' &&
+              selectedItem.id === button.id && (
+                <div
+                  onMouseDown={(e) => handleButtonResizeMouseDown(button.id, e)}
+                  className='absolute bottom-0 right-0 h-4 w-4 cursor-se-resize bg-blue-500'
+                />
+              )}
           </div>
         ))}
       </div>
@@ -529,7 +554,8 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
                 {pages
                   .filter((p) => p.id !== currentPageId)
                   .map((page) => {
-                    const pageNumber = pages.findIndex((p) => p.id === page.id) + 1
+                    const pageNumber =
+                      pages.findIndex((p) => p.id === page.id) + 1
                     const displayTitle = page.title || `페이지 ${pageNumber}`
                     return (
                       <option key={page.id} value={page.id}>
@@ -702,7 +728,8 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
                 {pages
                   .filter((p) => p.id !== currentPageId)
                   .map((page) => {
-                    const pageNumber = pages.findIndex((p) => p.id === page.id) + 1
+                    const pageNumber =
+                      pages.findIndex((p) => p.id === page.id) + 1
                     const displayTitle = page.title || `페이지 ${pageNumber}`
                     return (
                       <option key={page.id} value={page.id}>

@@ -146,7 +146,10 @@ const SortablePageItem: React.FC<SortablePageItemProps> = ({
                 ✓
               </span>
             ) : (
-              <span className='text-red-600' title={validation.errors.join('\n')}>
+              <span
+                className='text-red-600'
+                title={validation.errors.join('\n')}
+              >
                 ⚠
               </span>
             )}

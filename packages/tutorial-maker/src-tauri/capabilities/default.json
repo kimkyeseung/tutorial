@@ -22,7 +22,11 @@
     },
     {
       "identifier": "fs:allow-read-file",
-      "allow": [{ "path": "$TEMP/**" }, { "path": "$RESOURCE/**" }, { "path": "**" }]
+      "allow": [
+        { "path": "$TEMP/**" },
+        { "path": "$RESOURCE/**" },
+        { "path": "**" }
+      ]
     },
     {
       "identifier": "fs:allow-create",

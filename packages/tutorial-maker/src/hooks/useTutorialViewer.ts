@@ -24,7 +24,9 @@ export function useTutorialViewer(
 ): UseTutorialViewerResult {
   const [project, setProject] = useState<Project | null>(null)
   const [mediaUrls, setMediaUrls] = useState<Record<string, string>>({})
-  const [buttonImageUrls, setButtonImageUrls] = useState<Record<string, string>>({})
+  const [buttonImageUrls, setButtonImageUrls] = useState<
+    Record<string, string>
+  >({})
   const [iconUrl, setIconUrl] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -52,7 +54,8 @@ export function useTutorialViewer(
       setButtonImageUrls(urls.buttonImageUrls)
       setIconUrl(urls.iconUrl)
     } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'Failed to load tutorial'
+      const errorMessage =
+        e instanceof Error ? e.message : 'Failed to load tutorial'
       setError(errorMessage)
       console.error('Failed to load tutorial from path:', e)
     } finally {
@@ -74,7 +77,8 @@ export function useTutorialViewer(
       setButtonImageUrls(urls.buttonImageUrls)
       setIconUrl(urls.iconUrl)
     } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'Failed to load tutorial'
+      const errorMessage =
+        e instanceof Error ? e.message : 'Failed to load tutorial'
       setError(errorMessage)
       console.error('Failed to load tutorial from file:', e)
     } finally {

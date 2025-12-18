@@ -23,7 +23,11 @@ type FlowConnection = {
   label?: string
 }
 
-const FlowMap: React.FC<FlowMapProps> = ({ pages, onSelectPage, loopAtEnd }) => {
+const FlowMap: React.FC<FlowMapProps> = ({
+  pages,
+  onSelectPage,
+  loopAtEnd,
+}) => {
   const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([])
   const [connections, setConnections] = useState<FlowConnection[]>([])
   const [hoveredPage, setHoveredPage] = useState<number | null>(null)
@@ -87,7 +91,10 @@ const FlowMap: React.FC<FlowMapProps> = ({ pages, onSelectPage, loopAtEnd }) => 
               label: '처음으로',
             })
           }
-        } else if (button.action.type === 'goto' && button.action.targetPageId) {
+        } else if (
+          button.action.type === 'goto' &&
+          button.action.targetPageId
+        ) {
           const targetIndex = parseInt(button.action.targetPageId)
           if (targetIndex >= 0 && targetIndex < pages.length) {
             conns.push({
@@ -142,7 +149,11 @@ const FlowMap: React.FC<FlowMapProps> = ({ pages, onSelectPage, loopAtEnd }) => 
           type: 'auto',
           label: '자동',
         })
-      } else if (page.playType === 'single' && pageIndex === pages.length - 1 && loopAtEnd) {
+      } else if (
+        page.playType === 'single' &&
+        pageIndex === pages.length - 1 &&
+        loopAtEnd
+      ) {
         conns.push({
           fromPageIndex: pageIndex,
           toPageIndex: 0,
@@ -200,7 +211,13 @@ const FlowMap: React.FC<FlowMapProps> = ({ pages, onSelectPage, loopAtEnd }) => 
     fromIndex: number,
     toIndex: number,
     type: string
-  ): { path: string; color: string; label: string; strokeWidth: number; dashArray?: string } => {
+  ): {
+    path: string
+    color: string
+    label: string
+    strokeWidth: number
+    dashArray?: string
+  } => {
     const cardWidth = 160
     const cardHeight = 90
     const gap = 40 // gap-x-10 = 40px
@@ -490,9 +507,15 @@ const FlowMap: React.FC<FlowMapProps> = ({ pages, onSelectPage, loopAtEnd }) => 
                         ? 'bg-orange-500 text-white'
                         : 'bg-blue-500 text-white'
                     }`}
-                    title={page.playType === 'loop' ? '반복 재생' : `${page.playCount || 1}회 재생`}
+                    title={
+                      page.playType === 'loop'
+                        ? '반복 재생'
+                        : `${page.playCount || 1}회 재생`
+                    }
                   >
-                    {page.playType === 'loop' ? '반복' : `${page.playCount || 1}회`}
+                    {page.playType === 'loop'
+                      ? '반복'
+                      : `${page.playCount || 1}회`}
                   </div>
 
                   {/* 인터랙션 아이콘들 */}
@@ -549,7 +572,10 @@ const FlowMap: React.FC<FlowMapProps> = ({ pages, onSelectPage, loopAtEnd }) => 
         <div className='flex gap-4'>
           <span>
             버튼:{' '}
-            <strong>{pages.reduce((sum, p) => sum + p.buttons.length, 0)}</strong>개
+            <strong>
+              {pages.reduce((sum, p) => sum + p.buttons.length, 0)}
+            </strong>
+            개
           </span>
           <span>
             터치영역:{' '}
