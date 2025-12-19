@@ -9,7 +9,6 @@ import {
   DragEndEvent,
 } from '@dnd-kit/core'
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
@@ -75,17 +74,16 @@ const SortablePageItem: React.FC<SortablePageItemProps> = ({
       ref={setNodeRef}
       style={style}
       onClick={() => onSelectPage(page.id)}
-      className={`cursor-pointer rounded border p-3 transition-colors ${
-        isDragging
-          ? 'opacity-50 shadow-lg'
-          : selectedPageId === page.id
-            ? validation.isValid
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-red-500 bg-red-50'
-            : validation.isValid
-              ? 'border-gray-300 hover:bg-gray-50'
-              : 'border-red-300 bg-red-50 hover:bg-red-100'
-      }`}
+      className={`cursor-pointer rounded border p-3 transition-colors ${isDragging
+        ? 'opacity-50 shadow-lg'
+        : selectedPageId === page.id
+          ? validation.isValid
+            ? 'border-blue-500 bg-blue-50'
+            : 'border-red-500 bg-red-50'
+          : validation.isValid
+            ? 'border-gray-300 hover:bg-gray-50'
+            : 'border-red-300 bg-red-50 hover:bg-red-100'
+        }`}
     >
       <div className='flex items-center gap-3'>
         {/* 드래그 핸들 */}
@@ -127,11 +125,10 @@ const SortablePageItem: React.FC<SortablePageItemProps> = ({
           <div className='flex items-center gap-2 text-sm font-medium'>
             {/* 재생 타입 뱃지 */}
             <div
-              className={`inline-block rounded px-1 text-[9px] font-bold ${
-                page.playType === 'loop'
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-blue-500 text-white'
-              }`}
+              className={`inline-block rounded px-1 text-[9px] font-bold ${page.playType === 'loop'
+                ? 'bg-orange-500 text-white'
+                : 'bg-blue-500 text-white'
+                }`}
             >
               {page.playType === 'loop' ? '반복' : `${page.playCount || 1}회`}
             </div>
@@ -146,10 +143,7 @@ const SortablePageItem: React.FC<SortablePageItemProps> = ({
                 ✓
               </span>
             ) : (
-              <span
-                className='text-red-600'
-                title={validation.errors.join('\n')}
-              >
+              <span className='text-red-600' title={validation.errors.join('\n')}>
                 ⚠
               </span>
             )}
