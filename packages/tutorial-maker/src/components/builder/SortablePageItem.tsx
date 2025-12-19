@@ -128,19 +128,18 @@ const SortablePageItem: React.FC<SortablePageItemProps> = ({
               </span>
             )}
           </div>
-          <div className='mt-0.5 text-xs text-gray-500'>
+          <div className='mt-1 text-xs text-gray-500'>
             {page.mediaType === 'video' ? '🎥' : '🖼️'}{' '}
-            {thumbnail?.fileName ? (
+            {thumbnail?.fileName && (
               <span className='truncate' title={thumbnail.fileName}>
                 {thumbnail.fileName.length > 20
                   ? thumbnail.fileName.substring(0, 20) + '...'
                   : thumbnail.fileName}
               </span>
-            ) : (
-              <>
-                버튼 {page.buttons.length} • 터치 영역 {page.touchAreas.length}
-              </>
             )}
+          </div>
+          <div className='mt-0.5 text-xs text-gray-500'>
+            버튼 {page.buttons.length} • 터치 영역 {page.touchAreas.length}
           </div>
           {!validation.isValid && (
             <div className='mt-0.5 truncate text-xs text-red-600'>
