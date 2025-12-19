@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tauri dev",
+    "dev:vite": "vite",
     "build": "tsc -b && vite build",
     "tauri:build": "tauri build",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\" \"*.{json,html,md}\" \"src-tauri/**/*.json\"",
