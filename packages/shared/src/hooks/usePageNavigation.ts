@@ -41,12 +41,12 @@ export function usePageNavigation(project: Project | null) {
 
     if (!currentPage) return connected
 
-    // 다음 페이지 (버튼/터치에서 'next' 액션이 있거나, single 재생 타입일 때)
+    // 다음 페이지
     const nextIndex = currentPageIndex + 1
     if (nextIndex < project.pages.length) {
       connected.add(nextIndex)
     } else if (project.settings.loopAtEnd) {
-      connected.add(0) // 마지막에서 처음으로
+      connected.add(0)
     }
 
     // 버튼에서 goto로 연결된 페이지들

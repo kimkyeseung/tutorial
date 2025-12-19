@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { Page } from '../../types/project'
+import type { Page } from '@viswave/shared'
 import { validatePage } from '../../utils/pageValidation'
 
 type ThumbnailData = {

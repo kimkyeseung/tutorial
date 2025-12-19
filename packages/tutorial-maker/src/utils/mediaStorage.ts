@@ -1,4 +1,4 @@
-import type { Project, StoredMedia } from '../types/project'
+import type { Project, StoredMedia } from '@viswave/shared'
 
 const DB_NAME = 'tutorial-maker-db'
 const DB_VERSION = 1

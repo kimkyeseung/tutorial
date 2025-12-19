@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
 import type { Page } from '../../types/project'
-import PageButton from './PageButton'
+import PageButtonComponent from './PageButton'
 import TouchAreaComponent from './TouchAreaComponent'
 
 type VideoPlayerProps = {
@@ -131,7 +131,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           (button.showTiming === 'after-video' && hasEnded)
 
         return (
-          <PageButton
+          <PageButtonComponent
             key={button.id}
             button={button}
             imageUrl={buttonImageUrls[button.imageId]}

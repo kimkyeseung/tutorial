@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import type { TouchArea } from '../../types/project'
+import type { TouchArea } from '@viswave/shared'
 
 type TouchAreaEditorProps = {
   touchAreas: TouchArea[]

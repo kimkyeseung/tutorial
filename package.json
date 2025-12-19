@@ -1,0 +1,19 @@
+{
+  "name": "viswave-tutorials",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:maker": "npm run dev -w @viswave/tutorial-maker",
+    "dev:viewer": "npm run dev -w @viswave/tutorial-viewer",
+    "build:maker": "npm run tauri:build -w @viswave/tutorial-maker",
+    "build:viewer": "npm run tauri:build -w @viswave/tutorial-viewer",
+    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx,js,jsx,json,css}\" \"packages/*/*.{json,html,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.7.4",
+    "prettier-plugin-tailwindcss": "^0.7.2"
+  }
+}

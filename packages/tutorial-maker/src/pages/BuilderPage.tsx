@@ -3,8 +3,7 @@ import FlowMap from '../components/builder/FlowMap'
 import PageEditor from '../components/builder/PageEditor'
 import PageList from '../components/builder/PageList'
 import ProjectSettings from '../components/builder/ProjectSettings'
-import ConfirmDialog from '../components/common/ConfirmDialog'
-import type { Project, Page } from '../types/project'
+import { ConfirmDialog, type Project, type Page } from '@viswave/shared'
 import {
   getAllProjects,
   saveProject,

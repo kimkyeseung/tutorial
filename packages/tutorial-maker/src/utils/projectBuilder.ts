@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { save } from '@tauri-apps/plugin-dialog'
 import { writeFile, mkdir } from '@tauri-apps/plugin-fs'
-import type { Project, MediaBuildInfo } from '../types/project'
+import type { Project, MediaBuildInfo } from '@viswave/shared'
 import { getAppIcon, getButtonImage, getMediaFile } from '../utils/mediaStorage'
 
 // Tauri 환경 확인 함수

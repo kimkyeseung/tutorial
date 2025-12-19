@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import type {
   Project,
   ProjectSettings as ProjectSettingsType,
-} from '../../types/project'
+} from '@viswave/shared'
 import {
   saveAppIcon,
   getAppIcon,

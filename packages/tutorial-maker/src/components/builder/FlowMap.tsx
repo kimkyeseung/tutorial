@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import type { Page } from '../../types/project'
+import type { Page } from '@viswave/shared'
 import { getMediaFile, createBlobURL } from '../../utils/mediaStorage'
 import { validatePage } from '../../utils/pageValidation'
 

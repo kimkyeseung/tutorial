@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import type { PageButton } from '../../types/project'
+import type { PageButton } from '@viswave/shared'
 import {
   saveButtonImage,
   getButtonImage,

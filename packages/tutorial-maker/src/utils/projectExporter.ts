@@ -1,5 +1,5 @@
 import JSZip from 'jszip'
-import type { Project, TutorialManifest } from '../types/project'
+import type { Project, TutorialManifest } from '@viswave/shared'
 import {
   getMediaFile,
   getButtonImage,

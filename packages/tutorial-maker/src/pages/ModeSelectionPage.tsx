@@ -1,5 +1,5 @@
 import React from 'react'
-import Footer from '../components/common/Footer'
+import { Footer } from '@viswave/shared'
 
 interface ModeSelectionPageProps {
   onSelectMode: (mode: 'maker' | 'viewer') => void

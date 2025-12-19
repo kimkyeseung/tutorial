@@ -1,4 +1,4 @@
-import type { Page } from '../types/project'
+import type { Page } from '@viswave/shared'
 
 export interface PageValidationResult {
   isValid: boolean

@@ -13,9 +13,8 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import type { Page } from '../../types/project'
+import { ConfirmDialog, type Page } from '@viswave/shared'
 import { getMediaFile, createBlobURL } from '../../utils/mediaStorage'
-import ConfirmDialog from '../common/ConfirmDialog'
 import SortablePageItem from './SortablePageItem'
 
 type PageListProps = {
@@ -106,7 +105,7 @@ const PageList: React.FC<PageListProps> = ({
           if (media) {
             let url: string
             if (page.mediaType === 'image') {
-              url = createBlobURL(media.blob)
+              url = await createBlobURL(media.blob)
             } else {
               url = await captureVideoThumbnail(media.blob)
             }

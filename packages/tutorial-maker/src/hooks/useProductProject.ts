@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { Project, MediaManifestEntry } from '../types/project'
+import type { Project, MediaManifestEntry } from '@viswave/shared'
 import {
   getProject,
   getMediaFile,

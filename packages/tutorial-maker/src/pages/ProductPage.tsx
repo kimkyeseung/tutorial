@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import ConfirmDialog from '../components/common/ConfirmDialog'
-import ControlOverlay from '../components/product/ControlOverlay'
-import EntryPage from '../components/product/EntryPage'
-import ErrorScreen from '../components/product/ErrorScreen'
-import LoadingScreen from '../components/product/LoadingScreen'
-import VideoPlayer from '../components/product/VideoPlayer'
-import { usePageNavigation } from '../hooks/usePageNavigation'
+import {
+  ConfirmDialog,
+  ControlOverlay,
+  EntryPage,
+  ErrorScreen,
+  LoadingScreen,
+  VideoPlayer,
+  usePageNavigation,
+  type Project,
+} from '@viswave/shared'
 import { useProductProject } from '../hooks/useProductProject'
-import type { Project } from '../types/project'
 
 // 프레젠테이션 전용 컴포넌트 (외부에서 데이터 주입)
 export interface ProductPageContentProps {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import type { Page, PageButton, TouchArea } from '../../types/project'
+import type { Page, PageButton, TouchArea } from '@viswave/shared'
 import {
   getMediaFile,
   createBlobURL,
