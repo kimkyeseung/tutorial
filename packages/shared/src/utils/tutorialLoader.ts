@@ -3,7 +3,7 @@ import type {
   Project,
   TutorialManifest,
   LoadedTutorial,
-} from '@viswave/shared'
+} from '../types/project'
 
 // .tutorial 또는 .zip 파일을 로드하여 튜토리얼 데이터 반환
 export const loadTutorialFile = async (

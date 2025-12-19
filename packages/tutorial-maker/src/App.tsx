@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
+import { makerRecentFiles } from '@viswave/shared'
 import BuilderPage from './pages/BuilderPage'
 import ModeSelectionPage from './pages/ModeSelectionPage'
 import ProductPage from './pages/ProductPage'
 import ViewerPage from './pages/ViewerPage'
-import { addRecentFile } from './utils/recentFiles'
 
 type AppMode = 'maker' | 'viewer' | null
 
@@ -31,7 +31,7 @@ function App() {
           if (matches.args.file?.value) {
             const filePath = matches.args.file.value as string
             if (filePath.endsWith('.tutorial') || filePath.endsWith('.zip')) {
-              addRecentFile(filePath)
+              makerRecentFiles.addRecentFile(filePath)
               setTutorialFilePath(filePath)
               setAppMode('viewer')
             }

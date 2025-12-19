@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { Project } from '@viswave/shared'
+import type { Project } from '../types/project'
 import {
   loadTutorialFile,
   loadTutorialFromFile,

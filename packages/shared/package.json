@@ -12,11 +12,16 @@
     "./types/*": "./src/types/*",
     "./utils/*": "./src/utils/*"
   },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  },
   "peerDependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@tauri-apps/api": "^2.0.2",
+    "@tauri-apps/plugin-fs": "^2.4.4",
     "@types/react": "^19.0.6",
     "@types/react-dom": "^19.0.2",
     "typescript": "~5.9.3"

@@ -1,13 +1,13 @@
 import React, { useCallback } from 'react'
-import { Footer, ErrorScreen, LoadingScreen } from '@viswave/shared'
-import { useTutorialViewer } from '../hooks/useTutorialViewer'
 import {
-  getRecentFiles,
-  addRecentFile,
-  removeRecentFile,
+  Footer,
+  ErrorScreen,
+  LoadingScreen,
+  ProductPageContent,
+  useTutorialViewer,
+  viewerRecentFiles,
   type RecentFile,
-} from '../utils/recentFiles'
-import { ProductPageContent } from './ProductPage'
+} from '@viswave/shared'
 
 interface ViewerPageProps {
   filePath: string | null
@@ -22,13 +22,13 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
 
   // 최근 파일 목록 로드
   React.useEffect(() => {
-    setRecentFiles(getRecentFiles())
+    setRecentFiles(viewerRecentFiles.getRecentFiles())
   }, [])
 
   // 파일 로드 성공 - 최근 파일에 추가
   React.useEffect(() => {
     if (filePath && project) {
-      addRecentFile(filePath)
+      viewerRecentFiles.addRecentFile(filePath)
     }
   }, [filePath, project])
 
@@ -43,8 +43,8 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
 
       if (selected && typeof selected === 'string') {
         // 최근 파일에 추가
-        addRecentFile(selected)
-        setRecentFiles(getRecentFiles())
+        viewerRecentFiles.addRecentFile(selected)
+        setRecentFiles(viewerRecentFiles.getRecentFiles())
         onFileSelect(selected)
       }
     } catch (err) {
@@ -64,8 +64,8 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
   const handleRemoveRecentFile = useCallback(
     (path: string, e: React.MouseEvent) => {
       e.stopPropagation()
-      removeRecentFile(path)
-      setRecentFiles(getRecentFiles())
+      viewerRecentFiles.removeRecentFile(path)
+      setRecentFiles(viewerRecentFiles.getRecentFiles())
     },
     []
   )
