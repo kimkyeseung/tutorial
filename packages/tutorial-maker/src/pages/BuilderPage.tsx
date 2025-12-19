@@ -490,7 +490,12 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
       <header className='bg-white shadow-sm'>
         <div className='mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8'>
           <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-4'>
+            <div className='flex items-center gap-3'>
+              <img
+                src='/icon.png'
+                alt='Tutorial Maker'
+                className='h-10 w-10 rounded-lg'
+              />
               <h1 className='text-2xl font-bold text-gray-900'>
                 Tutorial Maker
               </h1>
