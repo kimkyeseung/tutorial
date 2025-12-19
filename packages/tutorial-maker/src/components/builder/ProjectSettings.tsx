@@ -31,7 +31,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({
     if (project.appIcon) {
       const iconMedia = await getAppIcon(project.appIcon)
       if (iconMedia) {
-        setIconPreview(createBlobURL(iconMedia.blob))
+        setIconPreview(await createBlobURL(iconMedia.blob))
       }
     }
   }

@@ -60,7 +60,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({
         if (project.appIcon && !projectIcons[project.id]) {
           const icon = await getAppIcon(project.appIcon)
           if (icon) {
-            icons[project.id] = createBlobURL(icon.blob)
+            icons[project.id] = await createBlobURL(icon.blob)
           }
         }
       }

@@ -28,9 +28,10 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({
   const loadButtonImage = async (imageId: string) => {
     const image = await getButtonImage(imageId)
     if (image) {
+      const url = await createBlobURL(image.blob)
       setButtonImages((prev) => ({
         ...prev,
-        [imageId]: createBlobURL(image.blob),
+        [imageId]: url,
       }))
     }
   }

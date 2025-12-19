@@ -36,7 +36,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onUpdate, pages }) => {
   const loadMediaPreview = async (mediaId: string) => {
     const media = await getMediaFile(mediaId)
     if (media) {
-      const url = createBlobURL(media.blob)
+      const url = await createBlobURL(media.blob)
       setMediaPreview(url)
       setMediaFileName(media.name)
     }

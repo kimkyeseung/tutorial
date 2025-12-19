@@ -73,7 +73,7 @@ export function useProductProject(projectId?: string) {
         if (page.mediaId) {
           const media = await getMediaFile(page.mediaId)
           if (media) {
-            urls[page.mediaId] = createBlobURL(media.blob)
+            urls[page.mediaId] = await createBlobURL(media.blob)
           }
         }
       }
@@ -86,7 +86,7 @@ export function useProductProject(projectId?: string) {
           if (button.imageId && !buttonUrls[button.imageId]) {
             const image = await getButtonImage(button.imageId)
             if (image) {
-              buttonUrls[button.imageId] = createBlobURL(image.blob)
+              buttonUrls[button.imageId] = await createBlobURL(image.blob)
             }
           }
         }

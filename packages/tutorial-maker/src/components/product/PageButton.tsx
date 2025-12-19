@@ -27,7 +27,7 @@ const PageButtonComponent: React.FC<PageButtonProps> = ({
   const loadButtonImage = async () => {
     const image = await getButtonImage(button.imageId)
     if (image) {
-      setLocalImageUrl(createBlobURL(image.blob))
+      setLocalImageUrl(await createBlobURL(image.blob))
     }
   }
 

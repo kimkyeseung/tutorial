@@ -141,6 +141,7 @@ const PageList: React.FC<PageListProps> = ({
   const handleDeleteClick = (pageId: string, pageIndex: number) => {
     setDeleteConfirm({ isOpen: true, pageId, pageIndex })
   }
+  console.log(pages)
 
   return (
     <div className='rounded-lg bg-white p-4 shadow'>

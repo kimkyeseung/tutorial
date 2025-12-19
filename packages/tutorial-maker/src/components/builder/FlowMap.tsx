@@ -46,7 +46,7 @@ const FlowMap: React.FC<FlowMapProps> = ({
           const media = await getMediaFile(page.mediaId)
           if (media) {
             if (page.mediaType === 'image') {
-              thumbnailUrl = createBlobURL(media.blob)
+              thumbnailUrl = await createBlobURL(media.blob)
             } else if (page.mediaType === 'video') {
               // 비디오의 경우 첫 프레임을 캡처
               thumbnailUrl = await captureVideoThumbnail(media.blob)

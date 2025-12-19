@@ -36,6 +36,7 @@ const SortablePageItem: React.FC<SortablePageItemProps> = ({
     transition,
     isDragging,
   } = useSortable({ id: page.id })
+  console.log(page)
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -49,8 +50,7 @@ const SortablePageItem: React.FC<SortablePageItemProps> = ({
       ref={setNodeRef}
       style={style}
       onClick={() => onSelectPage(page.id)}
-      className={`cursor-pointer rounded border p-3 transition-colors ${
-        isDragging
+      className={`cursor-pointer rounded border p-3 transition-colors ${isDragging
           ? 'opacity-50 shadow-lg'
           : selectedPageId === page.id
             ? validation.isValid
@@ -59,7 +59,7 @@ const SortablePageItem: React.FC<SortablePageItemProps> = ({
             : validation.isValid
               ? 'border-gray-300 hover:bg-gray-50'
               : 'border-red-300 bg-red-50 hover:bg-red-100'
-      }`}
+        }`}
     >
       <div className='flex items-center gap-3'>
         {/* 드래그 핸들 */}
@@ -101,11 +101,10 @@ const SortablePageItem: React.FC<SortablePageItemProps> = ({
           <div className='flex items-center gap-2 text-sm font-medium'>
             {/* 재생 타입 뱃지 */}
             <div
-              className={`inline-block rounded px-1 text-[9px] font-bold ${
-                page.playType === 'loop'
+              className={`inline-block rounded px-1 text-[9px] font-bold ${page.playType === 'loop'
                   ? 'bg-orange-500 text-white'
                   : 'bg-blue-500 text-white'
-              }`}
+                }`}
             >
               {page.playType === 'loop' ? '반복' : `${page.playCount || 1}회`}
             </div>

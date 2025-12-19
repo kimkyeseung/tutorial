@@ -240,11 +240,29 @@ export const getAppIcon = async (
 }
 
 // Blob URL 생성 헬퍼
-export const createBlobURL = (blob: Blob): string => {
+// 이미지(5MB 미만)는 Data URL로, 영상 등 큰 파일은 blob URL 사용
+export const createBlobURL = async (blob: Blob): Promise<string> => {
+  const isImage = blob.type.startsWith('image/')
+  const isSmallFile = blob.size < 5 * 1024 * 1024 // 5MB 미만
+
+  // 이미지이고 작은 파일이면 Data URL 사용 (Tauri WebView 호환)
+  if (isImage && isSmallFile) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+  }
+
+  // 영상 등 큰 파일은 blob URL 사용
   return URL.createObjectURL(blob)
 }
 
 // Blob URL 해제 헬퍼
 export const revokeBlobURL = (url: string): void => {
-  URL.revokeObjectURL(url)
+  // Data URL은 메모리 해제가 필요 없음
+  if (url.startsWith('blob:')) {
+    URL.revokeObjectURL(url)
+  }
 }
