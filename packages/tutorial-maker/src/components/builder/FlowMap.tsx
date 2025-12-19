@@ -46,10 +46,12 @@ const FlowMap: React.FC<FlowMapProps> = ({
           const media = await getMediaFile(page.mediaId)
           if (media) {
             if (page.mediaType === 'image') {
+              // 이미지는 Data URL로 변환
               thumbnailUrl = await createBlobURL(media.blob)
             } else if (page.mediaType === 'video') {
-              // 비디오의 경우 첫 프레임을 캡처
-              thumbnailUrl = await captureVideoThumbnail(media.blob)
+              // 비디오는 썸네일 캡처 불가 (Tauri WebView에서 blob URL 차단)
+              // null로 설정하여 플레이스홀더 표시
+              thumbnailUrl = null
             }
           }
         }
@@ -177,34 +179,6 @@ const FlowMap: React.FC<FlowMapProps> = ({
 
     setConnections(uniqueConns)
   }, [pages, loopAtEnd])
-
-  // 비디오 썸네일 캡처
-  const captureVideoThumbnail = (blob: Blob): Promise<string> => {
-    return new Promise((resolve) => {
-      const video = document.createElement('video')
-      video.src = URL.createObjectURL(blob)
-      video.muted = true
-      video.currentTime = 0.5
-
-      video.onloadeddata = () => {
-        const canvas = document.createElement('canvas')
-        canvas.width = 160
-        canvas.height = 90
-        const ctx = canvas.getContext('2d')
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-          resolve(canvas.toDataURL('image/jpeg', 0.7))
-        } else {
-          resolve('')
-        }
-        URL.revokeObjectURL(video.src)
-      }
-
-      video.onerror = () => {
-        resolve('')
-      }
-    })
-  }
 
   // 화살표 렌더링을 위한 SVG 경로 계산
   const getArrowPath = (

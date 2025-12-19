@@ -61,33 +61,6 @@ const PageList: React.FC<PageListProps> = ({
     })
   )
 
-  // 비디오 썸네일 캡처
-  const captureVideoThumbnail = (blob: Blob): Promise<string> => {
-    return new Promise((resolve) => {
-      const video = document.createElement('video')
-      video.src = URL.createObjectURL(blob)
-      video.muted = true
-      video.currentTime = 0.5
-
-      video.onloadeddata = () => {
-        const canvas = document.createElement('canvas')
-        canvas.width = 80
-        canvas.height = 45
-        const ctx = canvas.getContext('2d')
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-          resolve(canvas.toDataURL('image/jpeg', 0.6))
-        } else {
-          resolve('')
-        }
-        URL.revokeObjectURL(video.src)
-      }
-
-      video.onerror = () => {
-        resolve('')
-      }
-    })
-  }
 
   // 썸네일 로드
   useEffect(() => {
@@ -105,9 +78,12 @@ const PageList: React.FC<PageListProps> = ({
           if (media) {
             let url: string
             if (page.mediaType === 'image') {
+              // 이미지는 Data URL로 변환 (createBlobURL이 이미 처리함)
               url = await createBlobURL(media.blob)
             } else {
-              url = await captureVideoThumbnail(media.blob)
+              // 비디오는 썸네일 캡처 불가 (Tauri WebView에서 blob URL 차단)
+              // 빈 문자열로 설정하여 플레이스홀더 표시
+              url = ''
             }
             newThumbnails[page.id] = {
               url,
@@ -140,7 +116,6 @@ const PageList: React.FC<PageListProps> = ({
   const handleDeleteClick = (pageId: string, pageIndex: number) => {
     setDeleteConfirm({ isOpen: true, pageId, pageIndex })
   }
-  console.log(pages)
 
   return (
     <div className='rounded-lg bg-white p-4 shadow'>

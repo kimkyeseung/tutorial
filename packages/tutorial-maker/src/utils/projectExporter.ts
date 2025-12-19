@@ -85,44 +85,16 @@ export const downloadFile = async (
   blob: Blob,
   filename: string
 ): Promise<boolean> => {
-  // Tauri 환경인지 확인
-  if ('__TAURI_INTERNALS__' in window) {
-    try {
-      const { save } = await import('@tauri-apps/plugin-dialog')
-      const { writeFile } = await import('@tauri-apps/plugin-fs')
-
-      // 저장 다이얼로그 열기
-      const filePath = await save({
-        defaultPath: filename,
-        filters: [{ name: 'Tutorial', extensions: ['tutorial'] }],
-      })
-
-      if (filePath) {
-        // Blob을 ArrayBuffer로 변환
-        const arrayBuffer = await blob.arrayBuffer()
-        const uint8Array = new Uint8Array(arrayBuffer)
-
-        // 파일 저장
-        await writeFile(filePath, uint8Array)
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error('Tauri file save failed:', error)
-      return false
-    }
-  } else {
-    // 웹 환경에서는 기존 방식 사용
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    return true
-  }
+  // 웹 환경에서 파일 다운로드
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  return true
 }
 
 // 하위 호환성을 위해 유지

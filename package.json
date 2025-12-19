@@ -8,7 +8,7 @@
   "scripts": {
     "dev:maker": "npm run dev -w @viswave/tutorial-maker",
     "dev:viewer": "npm run dev -w @viswave/tutorial-viewer",
-    "build:maker": "npm run tauri:build -w @viswave/tutorial-maker",
+    "build:maker": "npm run build -w @viswave/tutorial-maker",
     "build:viewer": "npm run tauri:build -w @viswave/tutorial-viewer",
     "format": "prettier --write \"packages/*/src/**/*.{ts,tsx,js,jsx,json,css}\" \"packages/*/*.{json,html,md}\""
   },
