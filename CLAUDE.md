@@ -28,8 +28,9 @@ npm run build:viewer  # Full Tauri desktop app build (produces exe/dmg/deb)
 npm run format        # Prettier formatting across all packages
 ```
 
-### Testing (tutorial-maker only)
+### Testing
 ```bash
+# In packages/shared or packages/tutorial-maker
 npm run test          # Run Vitest in watch mode
 npm run test:run      # Run tests once
 npm run test:coverage # Run tests with coverage report
@@ -37,11 +38,15 @@ npm run test:coverage # Run tests with coverage report
 
 ### Per-Package Commands
 ```bash
+# In packages/shared
+npm run test          # Vitest watch mode (recentFiles, usePageNavigation)
+npm run test:run      # Run tests once
+
 # In packages/tutorial-maker
 npm run dev           # Vite dev server
 npm run build         # tsc + vite build
 npm run preview       # Preview production build
-npm run test          # Vitest watch mode
+npm run test          # Vitest watch mode (pageValidation)
 npm run test:run      # Run tests once
 
 # In packages/tutorial-viewer
@@ -103,7 +108,7 @@ The `usePageNavigation` hook manages page transitions:
 ## Tech Stack
 - Frontend: React 19, TypeScript 5.9, Tailwind CSS 3.4
 - Build: Vite 7.1
-- Testing: Vitest (tutorial-maker)
+- Testing: Vitest (shared, tutorial-maker)
 - Desktop: Tauri 2.0 with Rust backend
 - Storage: IndexedDB (idb pattern in mediaStorage.ts)
 - Export: JSZip for .tutorial files
