@@ -117,13 +117,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         />
       )}
 
-      {/* 비디오 종료 상태 표시 (디버깅용) */}
-      {hasEnded && page.playType === 'loop' && (
-        <div className='absolute right-4 top-4 rounded bg-green-500 px-3 py-1 text-sm text-white opacity-50'>
-          반복 재생 중
-        </div>
-      )}
-
       {/* 버튼 렌더링 */}
       {page.buttons.map((button) => {
         const isVisible =
