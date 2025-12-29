@@ -15,7 +15,7 @@ interface ViewerPageProps {
 }
 
 const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
-  const { project, mediaUrls, buttonImageUrls, isLoading, error } =
+  const { project, mediaUrls, buttonImageUrls, iconUrl, isLoading, error } =
     useTutorialViewer(filePath)
 
   const [recentFiles, setRecentFiles] = React.useState<RecentFile[]>([])
@@ -150,6 +150,7 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
       project={project}
       mediaUrls={mediaUrls}
       buttonImageUrls={buttonImageUrls}
+      iconUrl={iconUrl}
     />
   )
 }

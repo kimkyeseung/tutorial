@@ -4,6 +4,7 @@ import {
   getProject,
   getMediaFile,
   getButtonImage,
+  getAppIcon,
   createBlobURL,
 } from '../utils/mediaStorage'
 
@@ -13,6 +14,7 @@ export function useProductProject(projectId?: string) {
   const [buttonImageUrls, setButtonImageUrls] = useState<
     Record<string, string>
   >({})
+  const [iconUrl, setIconUrl] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -61,6 +63,14 @@ export function useProductProject(projectId?: string) {
       }
       setButtonImageUrls(buttonUrls)
 
+      // 앱 아이콘 로드
+      if (projectData.appIcon) {
+        const icon = await getAppIcon(projectData.appIcon)
+        if (icon) {
+          setIconUrl(await createBlobURL(icon.blob))
+        }
+      }
+
       setIsLoading(false)
     } catch (error) {
       console.error('Failed to load project data:', error)
@@ -68,5 +78,5 @@ export function useProductProject(projectId?: string) {
     }
   }
 
-  return { project, mediaUrls, buttonImageUrls, isLoading }
+  return { project, mediaUrls, buttonImageUrls, iconUrl, isLoading }
 }

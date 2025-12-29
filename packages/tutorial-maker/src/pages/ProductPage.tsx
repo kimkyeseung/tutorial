@@ -12,7 +12,7 @@ interface ProductPageProps {
 }
 
 const ProductPage: React.FC<ProductPageProps> = ({ projectId }) => {
-  const { project, mediaUrls, buttonImageUrls, isLoading } =
+  const { project, mediaUrls, buttonImageUrls, iconUrl, isLoading } =
     useProductProject(projectId)
 
   // 로딩 중
@@ -35,6 +35,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ projectId }) => {
       project={project}
       mediaUrls={mediaUrls}
       buttonImageUrls={buttonImageUrls}
+      iconUrl={iconUrl}
       emptyMessage='빌더 페이지에서 페이지를 추가해주세요'
     />
   )

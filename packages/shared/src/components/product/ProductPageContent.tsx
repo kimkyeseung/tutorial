@@ -12,6 +12,7 @@ export interface ProductPageContentProps {
   project: Project
   mediaUrls: Record<string, string>
   buttonImageUrls: Record<string, string>
+  iconUrl?: string // 앱 아이콘 URL (옵션)
   onExit?: () => void // 종료 시 콜백 (옵션)
   emptyMessage?: string // 페이지가 없을 때 메시지 (옵션)
 }
@@ -20,6 +21,7 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
   project,
   mediaUrls,
   buttonImageUrls,
+  iconUrl,
   onExit,
   emptyMessage = '페이지가 없습니다',
 }) => {
@@ -166,7 +168,11 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
 
       {/* 입구 페이지 */}
       {showEntryPage && (
-        <EntryPage projectName={project.name} onStart={handleStartClick} />
+        <EntryPage
+          project={project}
+          iconUrl={iconUrl}
+          onStart={handleStartClick}
+        />
       )}
 
       {/* 마운트된 모든 페이지 렌더링 (프리로딩) */}

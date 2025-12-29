@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
+import type { Project } from '../../types/project'
 
 type EntryPageProps = {
-  projectName: string
+  project: Project
+  iconUrl?: string
   onStart: () => void
 }
 
@@ -18,7 +20,17 @@ const toggleFullscreen = async () => {
   }
 }
 
-const EntryPage: React.FC<EntryPageProps> = ({ projectName, onStart }) => {
+// 날짜 포맷 함수
+const formatDate = (timestamp: number): string => {
+  const date = new Date(timestamp)
+  return date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
+const EntryPage: React.FC<EntryPageProps> = ({ project, iconUrl, onStart }) => {
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   // 전체화면 상태 감지
@@ -51,16 +63,73 @@ const EntryPage: React.FC<EntryPageProps> = ({ projectName, onStart }) => {
         {isFullscreen ? '⛶ 창모드' : '⛶ 전체화면'}
       </button>
 
-      <h1 className='mb-8 text-4xl font-bold text-white'>{projectName}</h1>
-      <button
-        onClick={onStart}
-        className='rounded-xl bg-blue-600 px-12 py-4 text-xl font-semibold text-white shadow-lg transition-all hover:bg-blue-500 hover:shadow-xl active:scale-95'
-      >
-        시작하기
-      </button>
-      <p className='mt-6 text-sm text-gray-400'>
-        화면을 터치하거나 버튼을 클릭하세요
-      </p>
+      {/* 프로젝트 정보 영역 */}
+      <div className='flex max-w-2xl flex-col items-center px-8'>
+        {/* 앱 아이콘 */}
+        {iconUrl && (
+          <img
+            src={iconUrl}
+            alt='App Icon'
+            className='mb-6 h-24 w-24 rounded-2xl object-cover shadow-lg'
+          />
+        )}
+
+        {/* 프로젝트 이름 */}
+        <h1 className='mb-4 text-center text-4xl font-bold text-white'>
+          {project.appTitle || project.name}
+        </h1>
+
+        {/* 프로젝트 설명 */}
+        {project.description && (
+          <p className='mb-6 text-center text-lg text-gray-300'>
+            {project.description}
+          </p>
+        )}
+
+        {/* 프로젝트 메타 정보 */}
+        <div className='mb-8 flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400'>
+          <span className='flex items-center gap-1'>
+            <span className='text-gray-500'>📄</span>
+            {project.pages.length}개 페이지
+          </span>
+          <span className='text-gray-600'>•</span>
+          <span className='flex items-center gap-1'>
+            <span className='text-gray-500'>📐</span>
+            {project.settings.windowWidth} × {project.settings.windowHeight}
+          </span>
+          {project.settings.exitKey && (
+            <>
+              <span className='text-gray-600'>•</span>
+              <span className='flex items-center gap-1'>
+                <span className='text-gray-500'>⎋</span>
+                {project.settings.exitKey} 키로 종료
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* 시작 버튼 */}
+        <button
+          onClick={onStart}
+          className='rounded-xl bg-blue-600 px-12 py-4 text-xl font-semibold text-white shadow-lg transition-all hover:bg-blue-500 hover:shadow-xl active:scale-95'
+        >
+          시작하기
+        </button>
+
+        <p className='mt-6 text-sm text-gray-400'>
+          화면을 터치하거나 버튼을 클릭하세요
+        </p>
+
+        {/* 생성일/수정일 */}
+        <div className='mt-8 text-xs text-gray-500'>
+          {project.createdAt && (
+            <span>생성: {formatDate(project.createdAt)}</span>
+          )}
+          {project.updatedAt && project.updatedAt !== project.createdAt && (
+            <span className='ml-4'>수정: {formatDate(project.updatedAt)}</span>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
