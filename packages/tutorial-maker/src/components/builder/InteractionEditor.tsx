@@ -532,7 +532,9 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
               className='w-full rounded border border-gray-300 px-3 py-2 text-sm'
             >
               <option value='next'>다음 페이지</option>
-              <option value='goto'>특정 페이지로</option>
+              <option value='goto' disabled={pages.length <= 1}>
+                특정 페이지로 {pages.length <= 1 && '(페이지 추가 필요)'}
+              </option>
             </select>
           </div>
 
@@ -541,30 +543,36 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
               <label className='mb-1 block text-sm font-medium text-gray-700'>
                 이동할 페이지
               </label>
-              <select
-                value={selectedButton.action.targetPageId || '0'}
-                onChange={(e) =>
-                  handleButtonUpdate(selectedButton.id, {
-                    action: {
-                      type: 'goto',
-                      targetPageId: e.target.value,
-                    },
-                  })
-                }
-                className='w-full rounded border border-gray-300 px-3 py-2 text-sm'
-              >
-                {pages
-                  .filter((_, idx) => idx !== pages.findIndex((p) => p.id === currentPageId))
-                  .map((page) => {
-                    const pageIndex = pages.findIndex((p) => p.id === page.id)
-                    const displayTitle = page.title || `페이지 ${pageIndex + 1}`
-                    return (
-                      <option key={page.id} value={pageIndex.toString()}>
-                        {pageIndex + 1}. {displayTitle}
-                      </option>
-                    )
-                  })}
-              </select>
+              {pages.length <= 1 ? (
+                <p className='text-sm text-red-500'>
+                  이동할 페이지가 없습니다. 페이지를 추가해주세요.
+                </p>
+              ) : (
+                <select
+                  value={selectedButton.action.targetPageId || '0'}
+                  onChange={(e) =>
+                    handleButtonUpdate(selectedButton.id, {
+                      action: {
+                        type: 'goto',
+                        targetPageId: e.target.value,
+                      },
+                    })
+                  }
+                  className='w-full rounded border border-gray-300 px-3 py-2 text-sm'
+                >
+                  {pages
+                    .filter((_, idx) => idx !== pages.findIndex((p) => p.id === currentPageId))
+                    .map((page) => {
+                      const pageIndex = pages.findIndex((p) => p.id === page.id)
+                      const displayTitle = page.title || `페이지 ${pageIndex + 1}`
+                      return (
+                        <option key={page.id} value={pageIndex.toString()}>
+                          {pageIndex + 1}. {displayTitle}
+                        </option>
+                      )
+                    })}
+                </select>
+              )}
             </div>
           )}
 
@@ -706,7 +714,9 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
               className='w-full rounded border border-gray-300 px-3 py-2 text-sm'
             >
               <option value='next'>다음 페이지</option>
-              <option value='goto'>특정 페이지로</option>
+              <option value='goto' disabled={pages.length <= 1}>
+                특정 페이지로 {pages.length <= 1 && '(페이지 추가 필요)'}
+              </option>
             </select>
           </div>
 
@@ -715,30 +725,36 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
               <label className='mb-1 block text-sm font-medium text-gray-700'>
                 이동할 페이지
               </label>
-              <select
-                value={selectedTouchArea.action.targetPageId || '0'}
-                onChange={(e) =>
-                  handleTouchAreaUpdate(selectedTouchArea.id, {
-                    action: {
-                      type: 'goto',
-                      targetPageId: e.target.value,
-                    },
-                  })
-                }
-                className='w-full rounded border border-gray-300 px-3 py-2 text-sm'
-              >
-                {pages
-                  .filter((_, idx) => idx !== pages.findIndex((p) => p.id === currentPageId))
-                  .map((page) => {
-                    const pageIndex = pages.findIndex((p) => p.id === page.id)
-                    const displayTitle = page.title || `페이지 ${pageIndex + 1}`
-                    return (
-                      <option key={page.id} value={pageIndex.toString()}>
-                        {pageIndex + 1}. {displayTitle}
-                      </option>
-                    )
-                  })}
-              </select>
+              {pages.length <= 1 ? (
+                <p className='text-sm text-red-500'>
+                  이동할 페이지가 없습니다. 페이지를 추가해주세요.
+                </p>
+              ) : (
+                <select
+                  value={selectedTouchArea.action.targetPageId || '0'}
+                  onChange={(e) =>
+                    handleTouchAreaUpdate(selectedTouchArea.id, {
+                      action: {
+                        type: 'goto',
+                        targetPageId: e.target.value,
+                      },
+                    })
+                  }
+                  className='w-full rounded border border-gray-300 px-3 py-2 text-sm'
+                >
+                  {pages
+                    .filter((_, idx) => idx !== pages.findIndex((p) => p.id === currentPageId))
+                    .map((page) => {
+                      const pageIndex = pages.findIndex((p) => p.id === page.id)
+                      const displayTitle = page.title || `페이지 ${pageIndex + 1}`
+                      return (
+                        <option key={page.id} value={pageIndex.toString()}>
+                          {pageIndex + 1}. {displayTitle}
+                        </option>
+                      )
+                    })}
+                </select>
+              )}
             </div>
           )}
 
