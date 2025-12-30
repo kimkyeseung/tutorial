@@ -49,7 +49,7 @@ npm run test:run      # Run tests once
 
 # In packages/tutorial-maker
 npm run dev           # tauri dev (includes Vite + Rust)
-npm run tauri:build   # Build desktop binary (requires viewer built first)
+npm run tauri:build   # Build desktop binary (requires player built first)
 npm run build:vite    # Frontend only (tsc + vite)
 npm run test          # Vitest watch mode (pageValidation)
 npm run test:run      # Run tests once
@@ -67,17 +67,20 @@ npm run build         # Frontend only (tsc + vite)
 packages/
 ├── shared/           # @viswave/shared - reusable code
 │   └── src/
-│       ├── components/product/  # VideoPlayer, PageButton, TouchAreaComponent
+│       ├── components/product/  # ProductPageContent, VideoPlayer, PageButton,
+│       │                        # TouchAreaComponent, DebugOverlay, ControlOverlay,
+│       │                        # EntryPage, LoadingScreen, ErrorScreen
 │       ├── hooks/               # usePageNavigation, useTutorialViewer
 │       ├── types/               # Project, Page, PageButton, TouchArea
 │       └── utils/               # tutorialLoader, recentFiles
 └── tutorial-maker/   # @viswave/tutorial-maker - Tauri desktop authoring tool
     ├── src/
     │   ├── pages/               # BuilderPage, ProductPage (preview)
-    │   ├── components/builder/  # PageEditor, FlowMap, PageList, ButtonEditor
+    │   ├── components/builder/  # PageEditor, PageList, FlowMap, InteractionEditor,
+    │   │                        # ProjectSettings, MediaUploader, SortablePageItem
     │   ├── hooks/               # useProductProject
     │   └── utils/               # mediaStorage, pageValidation
-    ├── src-tauri/               # Rust backend (lib.rs, embedded.rs)
+    ├── src-tauri/               # Rust backend (lib.rs, embedded.rs, icon.rs)
     └── player/       # @viswave/tutorial-player - Player runtime
         ├── src/                 # React frontend
         └── src-tauri/           # Rust backend (lib.rs, embedded.rs)
@@ -104,11 +107,20 @@ The `usePageNavigation` hook manages page transitions:
 - loop mode: repeats media infinitely, requires button/touch to navigate
 - single mode: plays N times then auto-advances
 
+### Preview Mode (ProductPage)
+미리보기 모드에서 사용 가능한 단축키:
+- `D`: 디버그 오버레이 표시/숨기기 (페이지 정보, 버튼/터치영역 테두리, 영상 재생 정보)
+- `Ctrl+1` / `Cmd+1`: 전체화면 토글
+- `←` / `→`: 이전/다음 페이지
+- `Home`: 첫 페이지로 이동
+- 설정된 종료 키 (ESC, F11, F12): 종료 확인 다이얼로그
+
 ### Media Storage
 - **IndexedDB stores**: projects, mediaFiles, buttonImages, appIcons
-- **Export format**: Standalone executable (viewer.exe + appended binary data)
-- **Binary structure**: [viewer.exe][media files][buttons][icon][project JSON][manifest JSON][manifest size (8 bytes)][magic bytes]
+- **Export format**: Standalone executable (player.exe + appended binary data)
+- **Binary structure**: [player.exe][media files][buttons][icon][project JSON][manifest JSON][manifest size (8 bytes)][magic bytes]
 - Position/size stored as percentages for responsive layout
+- **App Icon**: PNG/JPEG → ICO 변환 후 rcedit로 실행파일 PE 리소스에 적용 (icon.rs)
 
 ### Validation Rules (pageValidation.ts)
 - Every page requires media
