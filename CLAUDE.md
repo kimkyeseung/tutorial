@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Rules
+
+- 명시적으로 요청하지 않는 한 git commit 하지 말 것
+
 ## Project Overview
 
 Viswave Tutorials is a monorepo for building interactive touch-screen tutorials. It consists of:
@@ -72,7 +76,7 @@ packages/
     │   ├── pages/               # BuilderPage, ProductPage (preview)
     │   ├── components/builder/  # PageEditor, FlowMap, PageList, ButtonEditor
     │   ├── hooks/               # useProductProject
-    │   └── utils/               # mediaStorage, projectExporter, pageValidation
+    │   └── utils/               # mediaStorage, pageValidation
     ├── src-tauri/               # Rust backend (lib.rs, embedded.rs)
     └── player/       # @viswave/tutorial-player - Player runtime
         ├── src/                 # React frontend

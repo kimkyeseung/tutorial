@@ -16,7 +16,6 @@ import {
   createBlobURL,
 } from '../utils/mediaStorage'
 import { validateAllPages } from '../utils/pageValidation'
-import { exportProject, importProjectFromZip } from '../utils/projectExporter'
 
 interface ExportMediaFile {
   id: string
@@ -45,7 +44,6 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [currentView, setCurrentView] = useState<View>('list')
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null)
-  const [isExporting, setIsExporting] = useState(false)
   const [isBuilding, setIsBuilding] = useState(false)
   const [pagesViewMode, setPagesViewMode] = useState<PagesViewMode>('list')
   const [projectIcons, setProjectIcons] = useState<Record<string, string>>({})
@@ -219,55 +217,6 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
     }
   }
 
-  // ZIP으로 내보내기
-  const handleExportProject = async () => {
-    if (!selectedProject) return
-    setIsExporting(true)
-
-    try {
-      // 페이지 유효성 검사
-      if (selectedProject.pages.length === 0) {
-        alert(
-          '내보낼 수 없습니다.\n\n페이지가 없습니다. 최소 1개 이상의 페이지를 추가해주세요.'
-        )
-        setIsExporting(false)
-        return
-      }
-
-      const validation = validateAllPages(selectedProject.pages)
-      if (!validation.isValid) {
-        const errorMessages = validation.invalidPages
-          .map(
-            ({ pageIndex, errors }) =>
-              `페이지 ${pageIndex + 1}: ${errors.join(', ')}`
-          )
-          .join('\n')
-        alert(
-          `내보낼 수 없습니다.\n\n다음 페이지에 문제가 있습니다:\n${errorMessages}`
-        )
-        setIsExporting(false)
-        return
-      }
-
-      // 프로젝트 저장 먼저 수행
-      await saveProject(selectedProject)
-
-      // ZIP 파일로 내보내기
-      const success = await exportProject(selectedProject)
-
-      if (success) {
-        alert('프로젝트가 성공적으로 내보내졌습니다!')
-      } else {
-        alert('내보내기에 실패했습니다.')
-      }
-    } catch (error) {
-      console.error('Export failed:', error)
-      alert('내보내기에 실패했습니다.\n\n오류: ' + (error as Error).message)
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
   // 실행 파일 빌드
   const handleBuild = async () => {
     if (!selectedProject) return
@@ -363,35 +312,6 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
     } finally {
       setIsBuilding(false)
     }
-  }
-
-    const handleImportProject = async () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.zip'
-
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
-
-      try {
-        const project = await importProjectFromZip(file)
-
-        if (project) {
-          await loadProjects()
-          alert('프로젝트를 성공적으로 가져왔습니다!')
-          setSelectedProject(project)
-          setCurrentView('settings')
-        } else {
-          alert('프로젝트 가져오기에 실패했습니다.')
-        }
-      } catch (error) {
-        console.error('Import failed:', error)
-        alert('프로젝트 가져오기에 실패했습니다.')
-      }
-    }
-
-    input.click()
   }
 
   // 페이지 관리 함수들
@@ -540,20 +460,12 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                 Tutorial Maker
               </h1>
             </div>
-            <div className='flex gap-2'>
-              <button
-                onClick={handleImportProject}
-                className='flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700'
-              >
-                프로젝트 가져오기
-              </button>
-              <button
-                onClick={createNewProject}
-                className='rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700'
-              >
-                새 프로젝트
-              </button>
-            </div>
+            <button
+              onClick={createNewProject}
+              className='rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700'
+            >
+              새 프로젝트
+            </button>
           </div>
         </div>
       </header>
@@ -563,16 +475,6 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
           <div className='mx-4 w-full max-w-md rounded-lg bg-white p-8 text-center'>
             <h3 className='mb-2 text-xl font-bold'>빌드 중...</h3>
-            <p className='text-sm text-gray-600'>잠시만 기다려주세요</p>
-          </div>
-        </div>
-      )}
-
-      {/* 내보내기 진행 중 표시 */}
-      {isExporting && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
-          <div className='mx-4 w-full max-w-md rounded-lg bg-white p-8 text-center'>
-            <h3 className='mb-2 text-xl font-bold'>내보내는 중...</h3>
             <p className='text-sm text-gray-600'>잠시만 기다려주세요</p>
           </div>
         </div>
@@ -680,15 +582,8 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                   </button>
                 )}
                 <button
-                  onClick={handleExportProject}
-                  disabled={isBuilding || isExporting}
-                  className='flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
-                >
-                  ZIP으로 내보내기
-                </button>
-                <button
                   onClick={handleBuild}
-                  disabled={isBuilding || isExporting}
+                  disabled={isBuilding}
                   className='flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50'
                 >
                   {isBuilding ? '빌드 중...' : '실행 파일 빌드'}
@@ -753,22 +648,15 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                   </button>
                 )}
                 <button
-                  onClick={handleExportProject}
-                  disabled={isBuilding || isExporting}
-                  className='flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
-                >
-                  ZIP으로 내보내기
-                </button>
-                <button
                   onClick={handleBuild}
-                  disabled={isBuilding || isExporting}
+                  disabled={isBuilding}
                   className='flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50'
                 >
                   {isBuilding ? '빌드 중...' : '실행 파일 빌드'}
                 </button>
                 <button
                   onClick={handleSaveProject}
-                  disabled={isBuilding || isExporting || !hasUnsavedChanges}
+                  disabled={isBuilding || !hasUnsavedChanges}
                   className='rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
                 >
                   저장
