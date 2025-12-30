@@ -17,6 +17,7 @@ export interface ProductPageContentProps {
   onExport?: () => void // 실행파일 내보내기 콜백 (옵션)
   isExporting?: boolean // 내보내기 진행 중 여부 (옵션)
   emptyMessage?: string // 페이지가 없을 때 메시지 (옵션)
+  skipEntryPage?: boolean // 대문페이지 건너뛰기 (미리보기용)
 }
 
 export const ProductPageContent: React.FC<ProductPageContentProps> = ({
@@ -28,6 +29,7 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
   onExport,
   isExporting,
   emptyMessage = '페이지가 없습니다',
+  skipEntryPage = false,
 }) => {
   const {
     currentPageIndex,
@@ -40,8 +42,10 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
   } = usePageNavigation(project)
 
   const [exitConfirm, setExitConfirm] = useState(false)
-  const [showEntryPage, setShowEntryPage] = useState(true)
-  const [resumePlaybackSignal, setResumePlaybackSignal] = useState(0)
+  const [showEntryPage, setShowEntryPage] = useState(!skipEntryPage)
+  const [resumePlaybackSignal, setResumePlaybackSignal] = useState(
+    skipEntryPage ? 1 : 0
+  )
 
   // 전체화면 토글 함수
   const toggleFullscreen = async () => {

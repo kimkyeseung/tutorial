@@ -156,6 +156,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ projectId }) => {
       onExport={handleExport}
       isExporting={isExporting}
       emptyMessage='빌더 페이지에서 페이지를 추가해주세요'
+      skipEntryPage
     />
   )
 }
