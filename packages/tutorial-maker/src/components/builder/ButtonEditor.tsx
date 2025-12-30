@@ -336,7 +336,7 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({
                   action:
                     type === 'next'
                       ? { type: 'next' }
-                      : { type: 'goto', targetPageId: undefined },
+                      : { type: 'goto', targetPageId: '0' },
                 })
               }}
               className='w-full rounded border border-gray-300 px-3 py-2 text-sm'

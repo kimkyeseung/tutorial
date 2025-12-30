@@ -37,10 +37,39 @@ export function validateAllPages(pages: Page[]): {
 
   pages.forEach((page, index) => {
     const result = validatePage(page)
-    if (!result.isValid) {
+    const errors = [...result.errors]
+
+    // goto 대상 페이지 검증
+    for (const button of page.buttons) {
+      if (button.action.type === 'goto') {
+        if (!button.action.targetPageId) {
+          errors.push('버튼의 이동 대상 페이지가 설정되지 않았습니다')
+        } else {
+          const targetIndex = parseInt(button.action.targetPageId)
+          if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= pages.length) {
+            errors.push(`버튼의 이동 대상 페이지가 유효하지 않습니다 (${targetIndex + 1})`)
+          }
+        }
+      }
+    }
+
+    for (const touchArea of page.touchAreas) {
+      if (touchArea.action.type === 'goto') {
+        if (!touchArea.action.targetPageId) {
+          errors.push('터치 영역의 이동 대상 페이지가 설정되지 않았습니다')
+        } else {
+          const targetIndex = parseInt(touchArea.action.targetPageId)
+          if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= pages.length) {
+            errors.push(`터치 영역의 이동 대상 페이지가 유효하지 않습니다 (${targetIndex + 1})`)
+          }
+        }
+      }
+    }
+
+    if (errors.length > 0) {
       invalidPages.push({
         pageIndex: index,
-        errors: result.errors,
+        errors,
       })
     }
   })

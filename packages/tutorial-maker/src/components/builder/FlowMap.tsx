@@ -265,25 +265,41 @@ const FlowMap: React.FC<FlowMapProps> = ({
 
     // 일반 점프 (여러 칸 건너뛰기)
     const fromX = offsetX + fromCol * (cardWidth + gap) + cardWidth / 2
-    const fromY = fromRow * rowHeight + cardHeight
+    const fromY = fromRow * rowHeight + cardHeight / 2 // 카드 중앙
     const toX = offsetX + toCol * (cardWidth + gap) + cardWidth / 2
-    const toY = toRow * rowHeight
+    const toY = toRow * rowHeight + cardHeight / 2 // 카드 중앙
 
-    // 같은 행에서 점프하는 경우 - 위쪽으로 곡선
-    if (fromRow === toRow) {
-      const curveY = fromY - cardHeight - 30
+    // 뒤로 가는 점프 (이전 페이지로) - 왼쪽 바깥으로 돌아감
+    if (toIndex < fromIndex) {
+      const loopOffsetX = -40
+      const topY = Math.min(fromRow, toRow) * rowHeight - 20
+
       return {
-        path: `M ${fromX} ${fromY - cardHeight - 5} Q ${(fromX + toX) / 2} ${curveY - 20} ${toX} ${toY - 5}`,
+        path: `M ${fromX - cardWidth / 2} ${fromY} L ${loopOffsetX} ${fromY} L ${loopOffsetX} ${topY} L ${toX} ${topY} L ${toX} ${toY - cardHeight / 2 - 8}`,
+        color,
+        label: '',
+        strokeWidth: 2,
+        dashArray: '6,3', // 점선으로 뒤로가기 표시
+      }
+    }
+
+    // 같은 행에서 앞으로 점프하는 경우 - 아래쪽으로 곡선
+    if (fromRow === toRow) {
+      const curveY = fromY + cardHeight / 2 + 30
+      return {
+        path: `M ${fromX} ${fromY + cardHeight / 2} Q ${(fromX + toX) / 2} ${curveY + 20} ${toX} ${toY + cardHeight / 2}`,
         color,
         label: '',
         strokeWidth: 2,
       }
     }
 
-    // 다른 행으로 점프하는 경우
-    const midY = Math.max(fromY, toY) + 30
+    // 다른 행으로 앞으로 점프하는 경우
+    const startY = fromRow * rowHeight + cardHeight
+    const endY = toRow * rowHeight
+    const midY = Math.max(startY, endY) + 30
     return {
-      path: `M ${fromX} ${fromY} Q ${fromX} ${midY} ${(fromX + toX) / 2} ${midY} Q ${toX} ${midY} ${toX} ${toY + 8}`,
+      path: `M ${fromX} ${startY} Q ${fromX} ${midY} ${(fromX + toX) / 2} ${midY} Q ${toX} ${midY} ${toX} ${endY - 8}`,
       color,
       label: '',
       strokeWidth: 2,
