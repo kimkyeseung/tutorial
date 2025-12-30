@@ -13,12 +13,14 @@ type ProjectSettingsProps = {
   project: Project
   onUpdate: (updates: Partial<Project>) => void
   onSave: () => void
+  isSaveDisabled?: boolean
 }
 
 const ProjectSettings: React.FC<ProjectSettingsProps> = ({
   project,
   onUpdate,
   onSave,
+  isSaveDisabled = false,
 }) => {
   const [iconPreview, setIconPreview] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -67,7 +69,8 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({
         <h2 className='text-2xl font-bold text-gray-900'>프로젝트 설정</h2>
         <button
           onClick={onSave}
-          className='rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700'
+          disabled={isSaveDisabled}
+          className='rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
         >
           저장
         </button>

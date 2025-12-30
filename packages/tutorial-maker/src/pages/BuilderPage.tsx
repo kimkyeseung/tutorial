@@ -56,6 +56,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
     projectName: string
   }>({ isOpen: false, projectId: '', projectName: '' })
   const [unsavedChangesConfirm, setUnsavedChangesConfirm] = useState(false)
+  const [previewConfirm, setPreviewConfirm] = useState(false)
 
   useEffect(() => {
     loadProjects()
@@ -188,6 +189,34 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
   const skipSaveAndGoToPages = () => {
     setUnsavedChangesConfirm(false)
     setCurrentView('pages')
+  }
+
+  // 미리보기 클릭 핸들러
+  const handlePreviewClick = () => {
+    if (!selectedProject || !onPreview) return
+
+    if (hasUnsavedChanges) {
+      setPreviewConfirm(true)
+    } else {
+      onPreview(selectedProject.id)
+    }
+  }
+
+  const confirmSaveAndPreview = async () => {
+    setPreviewConfirm(false)
+    if (selectedProject && onPreview) {
+      await saveProject(selectedProject)
+      await loadProjects()
+      setHasUnsavedChanges(false)
+      onPreview(selectedProject.id)
+    }
+  }
+
+  const skipSaveAndPreview = () => {
+    setPreviewConfirm(false)
+    if (selectedProject && onPreview) {
+      onPreview(selectedProject.id)
+    }
   }
 
   // ZIP으로 내보내기
@@ -389,6 +418,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
 
     setSelectedProject(updatedProject)
     setSelectedPageId(newPage.id)
+    setHasUnsavedChanges(true)
   }
 
   const handleSelectPage = (pageId: string) => {
@@ -409,6 +439,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
     }
 
     setSelectedProject(updatedProject)
+    setHasUnsavedChanges(true)
 
     if (selectedPageId === pageId) {
       setSelectedPageId(updatedPages.length > 0 ? updatedPages[0].id : null)
@@ -429,6 +460,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
     }
 
     setSelectedProject(updatedProject)
+    setHasUnsavedChanges(true)
   }
 
   const handleReorderPages = (startIndex: number, endIndex: number) => {
@@ -450,6 +482,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
     }
 
     setSelectedProject(updatedProject)
+    setHasUnsavedChanges(true)
   }
 
   const selectedPage =
@@ -478,6 +511,18 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
         cancelText='저장 안 함'
         onConfirm={confirmSaveAndGoToPages}
         onCancel={skipSaveAndGoToPages}
+        variant='warning'
+      />
+
+      {/* 미리보기 전 저장 확인 다이얼로그 */}
+      <ConfirmDialog
+        isOpen={previewConfirm}
+        title='저장되지 않은 변경사항'
+        message={'저장되지 않은 변경사항이 있습니다.\n저장 후 미리보기하시겠습니까?'}
+        confirmText='저장 후 미리보기'
+        cancelText='저장 안 하고 미리보기'
+        onConfirm={confirmSaveAndPreview}
+        onCancel={skipSaveAndPreview}
         variant='warning'
       />
 
@@ -627,7 +672,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
               <div className='flex gap-2'>
                 {onPreview && (
                   <button
-                    onClick={() => onPreview(selectedProject.id)}
+                    onClick={handlePreviewClick}
                     disabled={isBuilding || selectedProject.pages.length === 0}
                     className='flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50'
                   >
@@ -654,6 +699,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
               project={selectedProject}
               onUpdate={handleProjectUpdate}
               onSave={handleSaveProject}
+              isSaveDisabled={!hasUnsavedChanges}
             />
             <div className='mt-6 text-center'>
               <button
@@ -699,7 +745,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                 </div>
                 {onPreview && (
                   <button
-                    onClick={() => onPreview(selectedProject.id)}
+                    onClick={handlePreviewClick}
                     disabled={isBuilding || selectedProject.pages.length === 0}
                     className='flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50'
                   >
@@ -722,7 +768,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                 </button>
                 <button
                   onClick={handleSaveProject}
-                  disabled={isBuilding || isExporting}
+                  disabled={isBuilding || isExporting || !hasUnsavedChanges}
                   className='rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
                 >
                   저장
