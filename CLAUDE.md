@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Viswave Tutorials is a monorepo for building interactive touch-screen tutorials. It consists of:
 - **tutorial-maker**: Desktop authoring tool (Tauri + React + Vite) - creates and exports tutorials as standalone executables
-- **tutorial-viewer**: Desktop viewer app (Tauri + Rust) - plays tutorials, embedded into maker for export
+  - **player**: Player runtime (Tauri + Rust) - embedded into maker for standalone exports
 - **shared**: Common components, hooks, types, and utilities
 
 ## Commands
@@ -14,14 +14,14 @@ Viswave Tutorials is a monorepo for building interactive touch-screen tutorials.
 ### Development
 ```bash
 npm run dev:maker     # Start tutorial-maker with Tauri dev mode (port 5173)
-npm run dev:viewer    # Start tutorial-viewer with Tauri dev mode (port 5174)
+npm run dev:player    # Start player with Tauri dev mode (port 5174) - for testing
 ```
 
 ### Building
 ```bash
-# IMPORTANT: Build viewer first, then maker (maker embeds viewer.exe)
-npm run build:viewer  # Full Tauri desktop app build for viewer
-npm run build:maker   # Full Tauri desktop app build for maker (embeds viewer.exe)
+# IMPORTANT: Build player first, then maker (maker embeds player.exe)
+npm run build:player  # Build player runtime
+npm run build:maker   # Build maker (embeds player.exe)
 ```
 
 ### Formatting
@@ -50,10 +50,10 @@ npm run build:vite    # Frontend only (tsc + vite)
 npm run test          # Vitest watch mode (pageValidation)
 npm run test:run      # Run tests once
 
-# In packages/tutorial-viewer
+# In packages/tutorial-maker/player
 npm run dev           # tauri dev (includes Vite + Rust)
-npm run tauri:build   # Build desktop binary
-npm run build:vite    # Frontend only (tsc + vite)
+npm run tauri:build   # Build player binary
+npm run build         # Frontend only (tsc + vite)
 ```
 
 ## Architecture
@@ -67,25 +67,25 @@ packages/
 │       ├── hooks/               # usePageNavigation, useTutorialViewer
 │       ├── types/               # Project, Page, PageButton, TouchArea
 │       └── utils/               # tutorialLoader, recentFiles
-├── tutorial-maker/   # @viswave/tutorial-maker - Tauri desktop authoring tool
-│   ├── src/
-│   │   ├── pages/               # BuilderPage, ProductPage (preview)
-│   │   ├── components/builder/  # PageEditor, FlowMap, PageList, ButtonEditor
-│   │   ├── hooks/               # useProductProject
-│   │   └── utils/               # mediaStorage, projectExporter, pageValidation
-│   └── src-tauri/               # Rust backend (lib.rs, embedded.rs)
-└── tutorial-viewer/  # @viswave/tutorial-viewer - Tauri desktop app
-    ├── src/                     # React frontend
-    └── src-tauri/               # Rust backend (lib.rs, embedded.rs)
+└── tutorial-maker/   # @viswave/tutorial-maker - Tauri desktop authoring tool
+    ├── src/
+    │   ├── pages/               # BuilderPage, ProductPage (preview)
+    │   ├── components/builder/  # PageEditor, FlowMap, PageList, ButtonEditor
+    │   ├── hooks/               # useProductProject
+    │   └── utils/               # mediaStorage, projectExporter, pageValidation
+    ├── src-tauri/               # Rust backend (lib.rs, embedded.rs)
+    └── player/       # @viswave/tutorial-player - Player runtime
+        ├── src/                 # React frontend
+        └── src-tauri/           # Rust backend (lib.rs, embedded.rs)
 ```
 
 ### Data Flow
 1. **Builder (tutorial-maker)**: Projects and media stored in IndexedDB
 2. **Export**: Standalone executable with embedded tutorial data
-   - Maker embeds viewer.exe at build time (via `include_bytes!`)
-   - Export appends project JSON, media files, button images, app icon to viewer binary
+   - Maker embeds player.exe at build time (via `include_bytes!`)
+   - Export appends project JSON, media files, button images, app icon to player binary
    - Uses magic bytes (`VISTUT_V1`) and manifest for data extraction
-3. **Viewer (tutorial-viewer)**: Reads embedded data from self, extracts to Object URLs for playback
+3. **Player (tutorial-maker/player)**: Reads embedded data from self, extracts to Object URLs for playback
 
 ### Key Data Models (packages/shared/src/types/Project.ts)
 - `Project`: Container with pages array and settings
@@ -115,11 +115,11 @@ The `usePageNavigation` hook manages page transitions:
 - Frontend: React 19, TypeScript 5.9, Tailwind CSS 3.4
 - Build: Vite 7.1
 - Testing: Vitest (shared, tutorial-maker)
-- Desktop: Tauri 2.0 with Rust backend (both maker and viewer)
+- Desktop: Tauri 2.0 with Rust backend (maker and player)
 - Storage: IndexedDB (idb pattern in mediaStorage.ts)
-- Export: Binary embedding (viewer.exe + appended data with magic bytes)
+- Export: Binary embedding (player.exe + appended data with magic bytes)
 - Drag/Drop: @dnd-kit for page reordering
 
 ## Build Dependencies
-- **viewer must be built before maker**: Maker uses `include_bytes!` to embed viewer.exe at compile time
-- Build order: `npm run build:viewer` → `npm run build:maker`
+- **player must be built before maker**: Maker uses `include_bytes!` to embed player.exe at compile time
+- Build order: `npm run build:player` → `npm run build:maker`

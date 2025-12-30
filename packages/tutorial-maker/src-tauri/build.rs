@@ -1,14 +1,12 @@
 use std::path::PathBuf;
 
 fn main() {
-    // viewer.exe 경로 설정 (상대 경로로 tutorial-viewer의 release 빌드 참조)
+    // player.exe 경로 설정 (maker 하위의 player 모듈 참조)
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
     let viewer_path = PathBuf::from(&manifest_dir)
         .parent()
         .unwrap()
-        .parent()
-        .unwrap()
-        .join("tutorial-viewer")
+        .join("player")
         .join("src-tauri")
         .join("target")
         .join("release")

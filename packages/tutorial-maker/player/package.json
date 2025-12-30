@@ -1,7 +1,7 @@
 {
-  "name": "@viswave/tutorial-viewer",
+  "name": "@viswave/tutorial-player",
   "version": "0.1.0",
-  "description": "Interactive Tutorial Viewer for Touch Screen Education",
+  "description": "Tutorial Player Runtime - embedded into maker for standalone exports",
   "type": "module",
   "scripts": {
     "dev": "tauri dev",

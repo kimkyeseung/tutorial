@@ -17,8 +17,8 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@viswave/shared": ["../shared/src"],
-      "@viswave/shared/*": ["../shared/src/*"]
+      "@viswave/shared": ["../../shared/src"],
+      "@viswave/shared/*": ["../../shared/src/*"]
     }
   },
   "include": ["src"]

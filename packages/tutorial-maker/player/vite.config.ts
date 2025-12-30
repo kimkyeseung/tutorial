@@ -7,7 +7,7 @@ export default defineConfig({
   clearScreen: false,
   resolve: {
     alias: {
-      '@viswave/shared': path.resolve(__dirname, '../shared/src'),
+      '@viswave/shared': path.resolve(__dirname, '../../shared/src'),
     },
   },
   server: {

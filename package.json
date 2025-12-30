@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/shared",
+    "packages/tutorial-maker",
+    "packages/tutorial-maker/player"
   ],
   "scripts": {
     "dev:maker": "npm run dev -w @viswave/tutorial-maker",
-    "dev:viewer": "npm run dev -w @viswave/tutorial-viewer",
+    "dev:player": "npm run dev -w @viswave/tutorial-player",
     "build:maker": "npm run build -w @viswave/tutorial-maker",
-    "build:viewer": "npm run tauri:build -w @viswave/tutorial-viewer",
+    "build:player": "npm run tauri:build -w @viswave/tutorial-player",
     "format": "prettier --write \"packages/*/src/**/*.{ts,tsx,js,jsx,json,css}\" \"packages/*/*.{json,html,md}\""
   },
   "devDependencies": {
