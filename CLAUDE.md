@@ -5,22 +5,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 Viswave Tutorials is a monorepo for building interactive touch-screen tutorials. It consists of:
-- **tutorial-maker**: Web-based authoring tool (React + Vite)
-- **tutorial-viewer**: Desktop viewer app (Tauri + Rust)
+- **tutorial-maker**: Desktop authoring tool (Tauri + React + Vite) - creates and exports tutorials as standalone executables
+- **tutorial-viewer**: Desktop viewer app (Tauri + Rust) - plays tutorials, embedded into maker for export
 - **shared**: Common components, hooks, types, and utilities
 
 ## Commands
 
 ### Development
 ```bash
-npm run dev:maker     # Start tutorial-maker dev server (port 5173)
+npm run dev:maker     # Start tutorial-maker with Tauri dev mode (port 5173)
 npm run dev:viewer    # Start tutorial-viewer with Tauri dev mode (port 5174)
 ```
 
 ### Building
 ```bash
-npm run build:maker   # TypeScript check + Vite build for web deployment
-npm run build:viewer  # Full Tauri desktop app build (produces exe/dmg/deb)
+# IMPORTANT: Build viewer first, then maker (maker embeds viewer.exe)
+npm run build:viewer  # Full Tauri desktop app build for viewer
+npm run build:maker   # Full Tauri desktop app build for maker (embeds viewer.exe)
 ```
 
 ### Formatting
@@ -43,16 +44,16 @@ npm run test          # Vitest watch mode (recentFiles, usePageNavigation)
 npm run test:run      # Run tests once
 
 # In packages/tutorial-maker
-npm run dev           # Vite dev server
-npm run build         # tsc + vite build
-npm run preview       # Preview production build
+npm run dev           # tauri dev (includes Vite + Rust)
+npm run tauri:build   # Build desktop binary (requires viewer built first)
+npm run build:vite    # Frontend only (tsc + vite)
 npm run test          # Vitest watch mode (pageValidation)
 npm run test:run      # Run tests once
 
 # In packages/tutorial-viewer
 npm run dev           # tauri dev (includes Vite + Rust)
 npm run tauri:build   # Build desktop binary
-npm run build         # Frontend only (tsc + vite)
+npm run build:vite    # Frontend only (tsc + vite)
 ```
 
 ## Architecture
@@ -66,21 +67,25 @@ packages/
 │       ├── hooks/               # usePageNavigation, useTutorialViewer
 │       ├── types/               # Project, Page, PageButton, TouchArea
 │       └── utils/               # tutorialLoader, recentFiles
-├── tutorial-maker/   # @viswave/tutorial-maker - web authoring tool
-│   └── src/
-│       ├── pages/               # BuilderPage, ProductPage (preview)
-│       ├── components/builder/  # PageEditor, FlowMap, PageList, ButtonEditor
-│       ├── hooks/               # useProductProject
-│       └── utils/               # mediaStorage, projectExporter, pageValidation
+├── tutorial-maker/   # @viswave/tutorial-maker - Tauri desktop authoring tool
+│   ├── src/
+│   │   ├── pages/               # BuilderPage, ProductPage (preview)
+│   │   ├── components/builder/  # PageEditor, FlowMap, PageList, ButtonEditor
+│   │   ├── hooks/               # useProductProject
+│   │   └── utils/               # mediaStorage, projectExporter, pageValidation
+│   └── src-tauri/               # Rust backend (lib.rs, embedded.rs)
 └── tutorial-viewer/  # @viswave/tutorial-viewer - Tauri desktop app
     ├── src/                     # React frontend
-    └── src-tauri/               # Rust backend (lib.rs, Cargo.toml)
+    └── src-tauri/               # Rust backend (lib.rs, embedded.rs)
 ```
 
 ### Data Flow
 1. **Builder (tutorial-maker)**: Projects and media stored in IndexedDB
-2. **Export**: ZIP file (.tutorial) containing manifest.json, project.json, media/, buttons/, icons/
-3. **Viewer (tutorial-viewer)**: Loads .tutorial ZIP files, extracts to Object URLs for playback
+2. **Export**: Standalone executable with embedded tutorial data
+   - Maker embeds viewer.exe at build time (via `include_bytes!`)
+   - Export appends project JSON, media files, button images, app icon to viewer binary
+   - Uses magic bytes (`VISTUT_V1`) and manifest for data extraction
+3. **Viewer (tutorial-viewer)**: Reads embedded data from self, extracts to Object URLs for playback
 
 ### Key Data Models (packages/shared/src/types/Project.ts)
 - `Project`: Container with pages array and settings
@@ -97,7 +102,8 @@ The `usePageNavigation` hook manages page transitions:
 
 ### Media Storage
 - **IndexedDB stores**: projects, mediaFiles, buttonImages, appIcons
-- **Export format**: ZIP with media blobs in folders
+- **Export format**: Standalone executable (viewer.exe + appended binary data)
+- **Binary structure**: [viewer.exe][media files][buttons][icon][project JSON][manifest JSON][manifest size (8 bytes)][magic bytes]
 - Position/size stored as percentages for responsive layout
 
 ### Validation Rules (pageValidation.ts)
@@ -109,7 +115,11 @@ The `usePageNavigation` hook manages page transitions:
 - Frontend: React 19, TypeScript 5.9, Tailwind CSS 3.4
 - Build: Vite 7.1
 - Testing: Vitest (shared, tutorial-maker)
-- Desktop: Tauri 2.0 with Rust backend
+- Desktop: Tauri 2.0 with Rust backend (both maker and viewer)
 - Storage: IndexedDB (idb pattern in mediaStorage.ts)
-- Export: JSZip for .tutorial files
+- Export: Binary embedding (viewer.exe + appended data with magic bytes)
 - Drag/Drop: @dnd-kit for page reordering
+
+## Build Dependencies
+- **viewer must be built before maker**: Maker uses `include_bytes!` to embed viewer.exe at compile time
+- Build order: `npm run build:viewer` → `npm run build:maker`

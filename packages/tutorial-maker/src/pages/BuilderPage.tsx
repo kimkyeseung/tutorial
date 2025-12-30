@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { invoke } from '@tauri-apps/api/core'
+import { save } from '@tauri-apps/plugin-dialog'
 import FlowMap from '../components/builder/FlowMap'
 import PageEditor from '../components/builder/PageEditor'
 import PageList from '../components/builder/PageList'
@@ -9,14 +11,27 @@ import {
   saveProject,
   deleteProject,
   getAppIcon,
+  getMediaFile,
+  getButtonImage,
   createBlobURL,
 } from '../utils/mediaStorage'
 import { validateAllPages } from '../utils/pageValidation'
-import {
-  exportAsTutorial,
-  exportProject,
-  importProjectFromZip,
-} from '../utils/projectExporter'
+import { exportProject, importProjectFromZip } from '../utils/projectExporter'
+
+interface ExportMediaFile {
+  id: string
+  name: string
+  mimeType: string
+  data: number[]
+}
+
+interface ExportRequest {
+  outputPath: string
+  projectJson: string
+  mediaFiles: ExportMediaFile[]
+  buttonFiles: ExportMediaFile[]
+  appIcon: number[] | null
+}
 
 type View = 'list' | 'settings' | 'pages'
 type PagesViewMode = 'list' | 'flowmap'
@@ -40,7 +55,6 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
     projectId: string
     projectName: string
   }>({ isOpen: false, projectId: '', projectName: '' })
-  const [exportConfirm, setExportConfirm] = useState(false)
   const [unsavedChangesConfirm, setUnsavedChangesConfirm] = useState(false)
 
   useEffect(() => {
@@ -153,57 +167,6 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
     setDeleteConfirm({ isOpen: false, projectId: '', projectName: '' })
   }
 
-  const confirmExportAsTutorial = async () => {
-    if (!selectedProject) return
-    setExportConfirm(false)
-    setIsExporting(true)
-
-    try {
-      // 페이지 유효성 검사
-      if (selectedProject.pages.length === 0) {
-        alert(
-          '❌ 내보낼 수 없습니다.\n\n페이지가 없습니다. 최소 1개 이상의 페이지를 추가해주세요.'
-        )
-        setIsExporting(false)
-        return
-      }
-
-      const validation = validateAllPages(selectedProject.pages)
-      if (!validation.isValid) {
-        const errorMessages = validation.invalidPages
-          .map(
-            ({ pageIndex, errors }) =>
-              `페이지 ${pageIndex + 1}: ${errors.join(', ')}`
-          )
-          .join('\n')
-        alert(
-          `❌ 내보낼 수 없습니다.\n\n다음 페이지에 문제가 있습니다:\n${errorMessages}`
-        )
-        setIsExporting(false)
-        return
-      }
-
-      // 프로젝트 저장 먼저 수행
-      await saveProject(selectedProject)
-
-      // .tutorial 파일로 내보내기 (자동 다운로드)
-      const success = await exportAsTutorial(selectedProject)
-
-      if (success) {
-        alert(
-          '✅ 튜토리얼 파일이 성공적으로 내보내졌습니다!\n\n.tutorial 파일이 다운로드 폴더에 저장되었습니다.'
-        )
-      } else {
-        alert('❌ 내보내기에 실패했습니다.')
-      }
-    } catch (error) {
-      console.error('Export failed:', error)
-      alert('❌ 내보내기에 실패했습니다.\n\n오류: ' + (error as Error).message)
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
   const handleGoToPages = () => {
     if (hasUnsavedChanges) {
       setUnsavedChangesConfirm(true)
@@ -236,7 +199,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
       // 페이지 유효성 검사
       if (selectedProject.pages.length === 0) {
         alert(
-          '❌ 내보낼 수 없습니다.\n\n페이지가 없습니다. 최소 1개 이상의 페이지를 추가해주세요.'
+          '내보낼 수 없습니다.\n\n페이지가 없습니다. 최소 1개 이상의 페이지를 추가해주세요.'
         )
         setIsExporting(false)
         return
@@ -251,7 +214,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
           )
           .join('\n')
         alert(
-          `❌ 내보낼 수 없습니다.\n\n다음 페이지에 문제가 있습니다:\n${errorMessages}`
+          `내보낼 수 없습니다.\n\n다음 페이지에 문제가 있습니다:\n${errorMessages}`
         )
         setIsExporting(false)
         return
@@ -264,29 +227,26 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
       const success = await exportProject(selectedProject)
 
       if (success) {
-        alert('✅ 프로젝트가 성공적으로 내보내졌습니다!')
+        alert('프로젝트가 성공적으로 내보내졌습니다!')
       } else {
-        alert('❌ 내보내기에 실패했습니다.')
+        alert('내보내기에 실패했습니다.')
       }
     } catch (error) {
       console.error('Export failed:', error)
-      alert('❌ 내보내기에 실패했습니다.\n\n오류: ' + (error as Error).message)
+      alert('내보내기에 실패했습니다.\n\n오류: ' + (error as Error).message)
     } finally {
       setIsExporting(false)
     }
   }
 
-  // 실행 파일 빌드 (현재는 .tutorial 내보내기로 대체)
+  // 실행 파일 빌드
   const handleBuild = async () => {
     if (!selectedProject) return
     setIsBuilding(true)
 
     try {
-      // 페이지 유효성 검사
       if (selectedProject.pages.length === 0) {
-        alert(
-          '❌ 빌드할 수 없습니다.\n\n페이지가 없습니다. 최소 1개 이상의 페이지를 추가해주세요.'
-        )
+        alert('빌드할 수 없습니다. 페이지가 없습니다.')
         setIsBuilding(false)
         return
       }
@@ -294,40 +254,89 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
       const validation = validateAllPages(selectedProject.pages)
       if (!validation.isValid) {
         const errorMessages = validation.invalidPages
-          .map(
-            ({ pageIndex, errors }) =>
-              `페이지 ${pageIndex + 1}: ${errors.join(', ')}`
-          )
-          .join('\n')
-        alert(
-          `❌ 빌드할 수 없습니다.\n\n다음 페이지에 문제가 있습니다:\n${errorMessages}`
-        )
+          .map(({ pageIndex, errors }) => `페이지 ${pageIndex + 1}: ${errors.join(', ')}`)
+          .join(', ')
+        alert(`빌드할 수 없습니다. ${errorMessages}`)
         setIsBuilding(false)
         return
       }
 
-      // 프로젝트 저장 먼저 수행
       await saveProject(selectedProject)
 
-      // .tutorial 파일로 내보내기
-      const success = await exportAsTutorial(selectedProject)
+      const outputPath = await save({
+        defaultPath: `${selectedProject.appTitle || selectedProject.name}.exe`,
+        filters: [{ name: 'Executable', extensions: ['exe'] }],
+      })
 
-      if (success) {
-        alert(
-          '✅ 튜토리얼 파일이 성공적으로 생성되었습니다!\n\n.tutorial 파일이 다운로드 폴더에 저장되었습니다.'
-        )
-      } else {
-        alert('❌ 빌드에 실패했습니다.')
+      if (!outputPath) {
+        setIsBuilding(false)
+        return
       }
+
+      const mediaFiles: ExportMediaFile[] = []
+      for (const page of selectedProject.pages) {
+        if (page.mediaId) {
+          const media = await getMediaFile(page.mediaId)
+          if (media) {
+            const arrayBuffer = await media.blob.arrayBuffer()
+            mediaFiles.push({
+              id: media.id,
+              name: media.name,
+              mimeType: media.blob.type,
+              data: Array.from(new Uint8Array(arrayBuffer)),
+            })
+          }
+        }
+      }
+
+      const buttonFiles: ExportMediaFile[] = []
+      const processedButtonIds = new Set<string>()
+      for (const page of selectedProject.pages) {
+        for (const button of page.buttons) {
+          if (button.imageId && !processedButtonIds.has(button.imageId)) {
+            processedButtonIds.add(button.imageId)
+            const image = await getButtonImage(button.imageId)
+            if (image) {
+              const arrayBuffer = await image.blob.arrayBuffer()
+              buttonFiles.push({
+                id: image.id,
+                name: image.name,
+                mimeType: image.blob.type,
+                data: Array.from(new Uint8Array(arrayBuffer)),
+              })
+            }
+          }
+        }
+      }
+
+      let appIcon: number[] | null = null
+      if (selectedProject.appIcon) {
+        const icon = await getAppIcon(selectedProject.appIcon)
+        if (icon) {
+          const arrayBuffer = await icon.blob.arrayBuffer()
+          appIcon = Array.from(new Uint8Array(arrayBuffer))
+        }
+      }
+
+      const request: ExportRequest = {
+        outputPath,
+        projectJson: JSON.stringify(selectedProject),
+        mediaFiles,
+        buttonFiles,
+        appIcon,
+      }
+
+      await invoke('export_as_executable', { request })
+      alert(`실행파일이 생성되었습니다: ${outputPath}`)
     } catch (error) {
       console.error('Build failed:', error)
-      alert('❌ 빌드에 실패했습니다.\n\n오류: ' + (error as Error).message)
+      alert('빌드에 실패했습니다: ' + (error as Error).message)
     } finally {
       setIsBuilding(false)
     }
   }
 
-  const handleImportProject = async () => {
+    const handleImportProject = async () => {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = '.zip'
@@ -460,20 +469,6 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
         variant='danger'
       />
 
-      {/* 내보내기 확인 다이얼로그 */}
-      <ConfirmDialog
-        isOpen={exportConfirm}
-        title='튜토리얼 내보내기'
-        message={
-          '프로젝트를 .tutorial 파일로 내보내시겠습니까?\n\n프로젝트 데이터와 모든 미디어 파일이 포함됩니다.'
-        }
-        confirmText='내보내기'
-        cancelText='취소'
-        onConfirm={confirmExportAsTutorial}
-        onCancel={() => setExportConfirm(false)}
-        variant='info'
-      />
-
       {/* 저장되지 않은 변경사항 확인 다이얼로그 */}
       <ConfirmDialog
         isOpen={unsavedChangesConfirm}
@@ -505,7 +500,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                 onClick={handleImportProject}
                 className='flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700'
               >
-                📥 프로젝트 가져오기
+                프로젝트 가져오기
               </button>
               <button
                 onClick={createNewProject}
@@ -518,11 +513,20 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
         </div>
       </header>
 
+      {/* 빌드 진행 중 표시 */}
+      {isBuilding && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
+          <div className='mx-4 w-full max-w-md rounded-lg bg-white p-8 text-center'>
+            <h3 className='mb-2 text-xl font-bold'>빌드 중...</h3>
+            <p className='text-sm text-gray-600'>잠시만 기다려주세요</p>
+          </div>
+        </div>
+      )}
+
       {/* 내보내기 진행 중 표시 */}
       {isExporting && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
           <div className='mx-4 w-full max-w-md rounded-lg bg-white p-8 text-center'>
-            <div className='mb-4 text-4xl'>📦</div>
             <h3 className='mb-2 text-xl font-bold'>내보내는 중...</h3>
             <p className='text-sm text-gray-600'>잠시만 기다려주세요</p>
           </div>
@@ -632,17 +636,17 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                 )}
                 <button
                   onClick={handleExportProject}
-                  disabled={isBuilding}
+                  disabled={isBuilding || isExporting}
                   className='flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
                 >
-                  📦 ZIP으로 내보내기
+                  ZIP으로 내보내기
                 </button>
                 <button
                   onClick={handleBuild}
-                  disabled={isBuilding}
+                  disabled={isBuilding || isExporting}
                   className='flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50'
                 >
-                  {isBuilding ? '🔨 빌드 중...' : '🚀 실행 파일 빌드'}
+                  {isBuilding ? '빌드 중...' : '실행 파일 빌드'}
                 </button>
               </div>
             </div>
@@ -680,7 +684,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                         : 'text-gray-600 hover:bg-gray-100'
                     } rounded-l-lg`}
                   >
-                    📋 목록
+                    목록
                   </button>
                   <button
                     onClick={() => setPagesViewMode('flowmap')}
@@ -690,7 +694,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                         : 'text-gray-600 hover:bg-gray-100'
                     } rounded-r-lg`}
                   >
-                    🗺️ 흐름도
+                    흐름도
                   </button>
                 </div>
                 {onPreview && (
@@ -704,21 +708,21 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                 )}
                 <button
                   onClick={handleExportProject}
-                  disabled={isBuilding}
+                  disabled={isBuilding || isExporting}
                   className='flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
                 >
-                  📦 ZIP으로 내보내기
+                  ZIP으로 내보내기
                 </button>
                 <button
                   onClick={handleBuild}
-                  disabled={isBuilding}
+                  disabled={isBuilding || isExporting}
                   className='flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50'
                 >
-                  {isBuilding ? '🔨 빌드 중...' : '🚀 실행 파일 빌드'}
+                  {isBuilding ? '빌드 중...' : '실행 파일 빌드'}
                 </button>
                 <button
                   onClick={handleSaveProject}
-                  disabled={isBuilding}
+                  disabled={isBuilding || isExporting}
                   className='rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
                 >
                   저장

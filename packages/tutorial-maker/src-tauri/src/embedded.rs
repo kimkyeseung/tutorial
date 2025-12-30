@@ -6,6 +6,9 @@ use std::path::Path;
 /// 매직 바이트 - 임베딩된 데이터 식별용
 const MAGIC_BYTES: &[u8] = b"VISTUT_V1";
 
+/// 빌드 시점에 viewer.exe를 임베드
+const VIEWER_EXE: &[u8] = include_bytes!(env!("VIEWER_EXE_PATH"));
+
 /// 미디어 파일 매니페스트 엔트리
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -29,11 +32,6 @@ pub struct BuildManifest {
     pub app_icon_size: Option<u64>,
 }
 
-/// 현재 실행 파일 경로 가져오기
-fn get_current_exe_path() -> Result<std::path::PathBuf, String> {
-    std::env::current_exe().map_err(|e| format!("Failed to get current exe path: {}", e))
-}
-
 /// 실행 파일 생성 (튜토리얼 임베딩)
 pub fn create_embedded_executable(
     output_path: &Path,
@@ -42,9 +40,9 @@ pub fn create_embedded_executable(
     button_files: Vec<(String, String, String, Vec<u8>)>,
     app_icon: Option<Vec<u8>>,
 ) -> Result<(), String> {
-    // 현재 exe 복사
-    let source_exe = get_current_exe_path()?;
-    fs::copy(&source_exe, output_path).map_err(|e| format!("Failed to copy exe: {}", e))?;
+    // 임베드된 viewer.exe를 출력 파일로 쓰기
+    fs::write(output_path, VIEWER_EXE)
+        .map_err(|e| format!("Failed to write viewer exe: {}", e))?;
 
     // 출력 파일 열기 (append 모드)
     let mut file = fs::OpenOptions::new()
@@ -52,10 +50,7 @@ pub fn create_embedded_executable(
         .open(output_path)
         .map_err(|e| format!("Failed to open output file: {}", e))?;
 
-    let mut current_offset = file
-        .metadata()
-        .map_err(|e| format!("Failed to get file size: {}", e))?
-        .len();
+    let mut current_offset = VIEWER_EXE.len() as u64;
 
     // 미디어 파일들 쓰기
     let mut media_entries: Vec<MediaManifestEntry> = Vec::new();
