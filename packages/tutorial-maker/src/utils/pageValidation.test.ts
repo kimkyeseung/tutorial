@@ -177,4 +177,182 @@ describe('validateAllPages', () => {
     expect(result.isValid).toBe(true)
     expect(result.invalidPages).toHaveLength(0)
   })
+
+  describe('goto validation', () => {
+    it('should pass when button has valid goto target', () => {
+      const pages = [
+        createBasePage({ id: 'page-1' }),
+        createBasePage({
+          id: 'page-2',
+          buttons: [
+            createButton({
+              action: { type: 'goto', targetPageId: '0' },
+            }),
+          ],
+        }),
+      ]
+      const result = validateAllPages(pages)
+
+      expect(result.isValid).toBe(true)
+      expect(result.invalidPages).toHaveLength(0)
+    })
+
+    it('should fail when button goto target is undefined', () => {
+      const pages = [
+        createBasePage({
+          id: 'page-1',
+          buttons: [
+            createButton({
+              action: { type: 'goto', targetPageId: undefined },
+            }),
+          ],
+        }),
+      ]
+      const result = validateAllPages(pages)
+
+      expect(result.isValid).toBe(false)
+      expect(result.invalidPages[0].errors).toContain(
+        '버튼의 이동 대상 페이지가 설정되지 않았습니다'
+      )
+    })
+
+    it('should fail when button goto target is out of range', () => {
+      const pages = [
+        createBasePage({
+          id: 'page-1',
+          buttons: [
+            createButton({
+              action: { type: 'goto', targetPageId: '5' },
+            }),
+          ],
+        }),
+        createBasePage({ id: 'page-2' }),
+      ]
+      const result = validateAllPages(pages)
+
+      expect(result.isValid).toBe(false)
+      expect(result.invalidPages[0].errors).toContain(
+        '버튼의 이동 대상 페이지가 유효하지 않습니다 (6)'
+      )
+    })
+
+    it('should fail when button goto target is negative', () => {
+      const pages = [
+        createBasePage({
+          id: 'page-1',
+          buttons: [
+            createButton({
+              action: { type: 'goto', targetPageId: '-1' },
+            }),
+          ],
+        }),
+      ]
+      const result = validateAllPages(pages)
+
+      expect(result.isValid).toBe(false)
+      expect(result.invalidPages[0].errors).toContain(
+        '버튼의 이동 대상 페이지가 유효하지 않습니다 (0)'
+      )
+    })
+
+    it('should pass when touch area has valid goto target', () => {
+      const pages = [
+        createBasePage({
+          id: 'page-1',
+          touchAreas: [
+            createTouchArea({
+              action: { type: 'goto', targetPageId: '0' },
+            }),
+          ],
+        }),
+      ]
+      const result = validateAllPages(pages)
+
+      expect(result.isValid).toBe(true)
+      expect(result.invalidPages).toHaveLength(0)
+    })
+
+    it('should fail when touch area goto target is undefined', () => {
+      const pages = [
+        createBasePage({
+          id: 'page-1',
+          touchAreas: [
+            createTouchArea({
+              action: { type: 'goto', targetPageId: undefined },
+            }),
+          ],
+        }),
+      ]
+      const result = validateAllPages(pages)
+
+      expect(result.isValid).toBe(false)
+      expect(result.invalidPages[0].errors).toContain(
+        '터치 영역의 이동 대상 페이지가 설정되지 않았습니다'
+      )
+    })
+
+    it('should fail when touch area goto target is out of range', () => {
+      const pages = [
+        createBasePage({
+          id: 'page-1',
+          touchAreas: [
+            createTouchArea({
+              action: { type: 'goto', targetPageId: '10' },
+            }),
+          ],
+        }),
+        createBasePage({ id: 'page-2' }),
+        createBasePage({ id: 'page-3' }),
+      ]
+      const result = validateAllPages(pages)
+
+      expect(result.isValid).toBe(false)
+      expect(result.invalidPages[0].errors).toContain(
+        '터치 영역의 이동 대상 페이지가 유효하지 않습니다 (11)'
+      )
+    })
+
+    it('should validate multiple goto actions on same page', () => {
+      const pages = [
+        createBasePage({
+          id: 'page-1',
+          buttons: [
+            createButton({
+              id: 'btn-1',
+              action: { type: 'goto', targetPageId: '0' }, // valid
+            }),
+            createButton({
+              id: 'btn-2',
+              action: { type: 'goto', targetPageId: '5' }, // invalid
+            }),
+          ],
+          touchAreas: [
+            createTouchArea({
+              id: 'touch-1',
+              action: { type: 'goto', targetPageId: undefined }, // invalid
+            }),
+          ],
+        }),
+        createBasePage({ id: 'page-2' }),
+      ]
+      const result = validateAllPages(pages)
+
+      expect(result.isValid).toBe(false)
+      expect(result.invalidPages[0].errors).toHaveLength(2)
+    })
+
+    it('should not validate goto for next action type', () => {
+      const pages = [
+        createBasePage({
+          id: 'page-1',
+          buttons: [createButton({ action: { type: 'next' } })],
+          touchAreas: [createTouchArea({ action: { type: 'next' } })],
+        }),
+      ]
+      const result = validateAllPages(pages)
+
+      expect(result.isValid).toBe(true)
+      expect(result.invalidPages).toHaveLength(0)
+    })
+  })
 })
