@@ -70,7 +70,7 @@ const EntryPage: React.FC<EntryPageProps> = ({ project, iconUrl, onStart }) => {
           <img
             src={iconUrl}
             alt='App Icon'
-            className='mb-6 h-24 w-24 rounded-2xl object-cover shadow-lg'
+            className='mb-6 h-[100px] w-[100px] rounded-2xl object-cover shadow-lg'
           />
         )}
 
