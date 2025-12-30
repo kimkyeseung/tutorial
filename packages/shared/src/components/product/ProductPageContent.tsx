@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import type { Project } from '../../types/project'
 import { usePageNavigation } from '../../hooks/usePageNavigation'
 import ConfirmDialog from '../common/ConfirmDialog'
 import ControlOverlay from './ControlOverlay'
+import DebugOverlay from './DebugOverlay'
 import EntryPage from './EntryPage'
 import ErrorScreen from './ErrorScreen'
-import VideoPlayer from './VideoPlayer'
+import VideoPlayer, { type VideoDebugInfo } from './VideoPlayer'
 
 // 프레젠테이션 전용 컴포넌트 (외부에서 데이터 주입)
 export interface ProductPageContentProps {
   project: Project
   mediaUrls: Record<string, string>
   buttonImageUrls: Record<string, string>
+  mediaSizes?: Record<string, number> // 미디어 파일 용량 (bytes)
   iconUrl?: string // 앱 아이콘 URL (옵션)
   onExit?: () => void // 종료 시 콜백 (옵션)
   onExport?: () => void // 실행파일 내보내기 콜백 (옵션)
@@ -24,6 +26,7 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
   project,
   mediaUrls,
   buttonImageUrls,
+  mediaSizes = {},
   iconUrl,
   onExit,
   onExport,
@@ -46,6 +49,15 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
   const [resumePlaybackSignal, setResumePlaybackSignal] = useState(
     skipEntryPage ? 1 : 0
   )
+  // 디버그 모드 (미리보기 전용, 'd' 키로 토글)
+  const [showDebugInfo, setShowDebugInfo] = useState(skipEntryPage)
+  const [videoDebugInfo, setVideoDebugInfo] = useState<VideoDebugInfo | null>(
+    null
+  )
+
+  const handleDebugInfoUpdate = useCallback((info: VideoDebugInfo) => {
+    setVideoDebugInfo(info)
+  }, [])
 
   // 전체화면 토글 함수
   const toggleFullscreen = async () => {
@@ -88,6 +100,12 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
         return
       }
 
+      // 'd' 키로 디버그 모드 토글 (미리보기 전용)
+      if (skipEntryPage && e.key === 'd') {
+        setShowDebugInfo((prev) => !prev)
+        return
+      }
+
       // 종료 키 확인
       if (project.settings.exitKey && e.key === project.settings.exitKey) {
         setExitConfirm(true)
@@ -106,7 +124,7 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [project, currentPageIndex, goToNextPage, goToPreviousPage, goToHome])
+  }, [project, currentPageIndex, goToNextPage, goToPreviousPage, goToHome, skipEntryPage])
 
   const handleVideoEnd = () => {
     // 단일 재생 모드일 때만 자동으로 다음 페이지로
@@ -215,6 +233,11 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
                 }
                 isActive={isCurrentPage}
                 resumeSignal={resumePlaybackSignal}
+                showDebugInfo={showDebugInfo}
+                onDebugInfoUpdate={
+                  isCurrentPage ? handleDebugInfoUpdate : undefined
+                }
+                totalPages={project.pages.length}
               />
             </div>
           )
@@ -236,6 +259,17 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
           totalPages={project.pages.length}
           onPrevious={goToPreviousPage}
           onHome={goToHome}
+        />
+      )}
+
+      {/* 디버그 오버레이 (미리보기 전용) */}
+      {!showEntryPage && showDebugInfo && currentPage && (
+        <DebugOverlay
+          page={currentPage}
+          pageIndex={currentPageIndex}
+          totalPages={project.pages.length}
+          videoDebugInfo={videoDebugInfo}
+          mediaSize={currentPage.mediaId ? mediaSizes[currentPage.mediaId] : undefined}
         />
       )}
     </div>

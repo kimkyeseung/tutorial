@@ -3,6 +3,13 @@ import type { Page } from '../../types/project'
 import PageButtonComponent from './PageButton'
 import TouchAreaComponent from './TouchAreaComponent'
 
+export type VideoDebugInfo = {
+  currentTime: number
+  duration: number
+  loopCount: number
+  isPlaying: boolean
+}
+
 type VideoPlayerProps = {
   page: Page
   mediaUrl: string
@@ -12,6 +19,9 @@ type VideoPlayerProps = {
   onTouchAreaClick: (touchAreaId: string) => void
   isActive?: boolean
   resumeSignal?: number
+  showDebugInfo?: boolean
+  onDebugInfoUpdate?: (info: VideoDebugInfo) => void
+  totalPages?: number
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -23,11 +33,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onTouchAreaClick,
   isActive = true,
   resumeSignal = 0,
+  showDebugInfo = false,
+  onDebugInfoUpdate,
+  totalPages = 0,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
   const [hasEnded, setHasEnded] = useState(false)
   const [currentPlayCount, setCurrentPlayCount] = useState(0) // 현재 재생 횟수
+  const [loopCount, setLoopCount] = useState(0) // 반복 횟수 (loop 모드용)
 
   // 활성 상태가 되면 비디오 재생, 비활성화되면 일시정지
   useEffect(() => {
@@ -35,6 +49,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       if (isActive) {
         setHasEnded(false)
         setCurrentPlayCount(0) // 재생 횟수 초기화
+        setLoopCount(0) // 반복 횟수 초기화
         videoRef.current.currentTime = 0
         videoRef.current.play().catch((err) => {
           console.error('Failed to play video:', err)
@@ -44,6 +59,35 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       }
     }
   }, [isActive, page.mediaType, mediaUrl])
+
+  // 디버그 정보 업데이트 (비디오 타임 업데이트)
+  useEffect(() => {
+    if (!showDebugInfo || !onDebugInfoUpdate || page.mediaType !== 'video') {
+      return
+    }
+
+    const video = videoRef.current
+    if (!video) return
+
+    const handleTimeUpdate = () => {
+      onDebugInfoUpdate({
+        currentTime: video.currentTime,
+        duration: video.duration || 0,
+        loopCount: loopCount,
+        isPlaying: !video.paused,
+      })
+    }
+
+    video.addEventListener('timeupdate', handleTimeUpdate)
+    video.addEventListener('play', handleTimeUpdate)
+    video.addEventListener('pause', handleTimeUpdate)
+
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate)
+      video.removeEventListener('play', handleTimeUpdate)
+      video.removeEventListener('pause', handleTimeUpdate)
+    }
+  }, [showDebugInfo, onDebugInfoUpdate, page.mediaType, loopCount])
 
   // 미디어 URL 변경 시 로드
   useEffect(() => {
@@ -81,6 +125,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       } else {
         // 아직 재생 횟수가 남았으면 다시 재생
         setCurrentPlayCount(newCount)
+        setLoopCount((prev) => prev + 1) // 반복 횟수 증가
         setHasEnded(false)
         if (videoRef.current) {
           videoRef.current.currentTime = 0
@@ -89,6 +134,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       }
     } else {
       // loop 모드: 무한 반복 재생
+      setLoopCount((prev) => prev + 1) // 반복 횟수 증가
       if (videoRef.current) {
         videoRef.current.currentTime = 0
         videoRef.current.play()
@@ -130,6 +176,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             imageUrl={buttonImageUrls[button.imageId]}
             onClick={() => onButtonClick(button.id)}
             isVisible={isVisible}
+            showDebugInfo={showDebugInfo}
+            totalPages={totalPages}
           />
         )
       })}
@@ -146,6 +194,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             touchArea={touchArea}
             onClick={() => onTouchAreaClick(touchArea.id)}
             isVisible={isVisible}
+            showDebugInfo={showDebugInfo}
+            totalPages={totalPages}
           />
         )
       })}

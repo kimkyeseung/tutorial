@@ -35,7 +35,7 @@ interface ProductPageProps {
 }
 
 const ProductPage: React.FC<ProductPageProps> = ({ projectId }) => {
-  const { project, mediaUrls, buttonImageUrls, iconUrl, isLoading } =
+  const { project, mediaUrls, mediaSizes, buttonImageUrls, iconUrl, isLoading } =
     useProductProject(projectId)
   const [isExporting, setIsExporting] = useState(false)
 
@@ -151,6 +151,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ projectId }) => {
     <ProductPageContent
       project={project}
       mediaUrls={mediaUrls}
+      mediaSizes={mediaSizes}
       buttonImageUrls={buttonImageUrls}
       iconUrl={iconUrl}
       onExport={handleExport}

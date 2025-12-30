@@ -11,6 +11,7 @@ import {
 export function useProductProject(projectId?: string) {
   const [project, setProject] = useState<Project | null>(null)
   const [mediaUrls, setMediaUrls] = useState<Record<string, string>>({})
+  const [mediaSizes, setMediaSizes] = useState<Record<string, number>>({})
   const [buttonImageUrls, setButtonImageUrls] = useState<
     Record<string, string>
   >({})
@@ -39,15 +40,18 @@ export function useProductProject(projectId?: string) {
 
       // 페이지 미디어 로드
       const urls: Record<string, string> = {}
+      const sizes: Record<string, number> = {}
       for (const page of projectData.pages) {
         if (page.mediaId) {
           const media = await getMediaFile(page.mediaId)
           if (media) {
             urls[page.mediaId] = await createBlobURL(media.blob)
+            sizes[page.mediaId] = media.blob.size
           }
         }
       }
       setMediaUrls(urls)
+      setMediaSizes(sizes)
 
       // 버튼 이미지 로드
       const buttonUrls: Record<string, string> = {}
@@ -78,5 +82,5 @@ export function useProductProject(projectId?: string) {
     }
   }
 
-  return { project, mediaUrls, buttonImageUrls, iconUrl, isLoading }
+  return { project, mediaUrls, mediaSizes, buttonImageUrls, iconUrl, isLoading }
 }
