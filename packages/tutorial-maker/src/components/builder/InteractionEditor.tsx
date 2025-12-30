@@ -524,7 +524,7 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
                   action:
                     type === 'next'
                       ? { type: 'next' }
-                      : { type: 'goto', targetPageId: undefined },
+                      : { type: 'goto', targetPageId: '0' },
                 })
               }}
               className='w-full rounded border border-gray-300 px-3 py-2 text-sm'
@@ -540,7 +540,7 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
                 이동할 페이지
               </label>
               <select
-                value={selectedButton.action.targetPageId || ''}
+                value={selectedButton.action.targetPageId || '0'}
                 onChange={(e) =>
                   handleButtonUpdate(selectedButton.id, {
                     action: {
@@ -551,16 +551,14 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
                 }
                 className='w-full rounded border border-gray-300 px-3 py-2 text-sm'
               >
-                <option value=''>페이지 선택...</option>
                 {pages
-                  .filter((p) => p.id !== currentPageId)
+                  .filter((_, idx) => idx !== pages.findIndex((p) => p.id === currentPageId))
                   .map((page) => {
-                    const pageNumber =
-                      pages.findIndex((p) => p.id === page.id) + 1
-                    const displayTitle = page.title || `페이지 ${pageNumber}`
+                    const pageIndex = pages.findIndex((p) => p.id === page.id)
+                    const displayTitle = page.title || `페이지 ${pageIndex + 1}`
                     return (
-                      <option key={page.id} value={page.id}>
-                        {pageNumber}. {displayTitle}
+                      <option key={page.id} value={pageIndex.toString()}>
+                        {pageIndex + 1}. {displayTitle}
                       </option>
                     )
                   })}
@@ -698,7 +696,7 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
                   action:
                     type === 'next'
                       ? { type: 'next' }
-                      : { type: 'goto', targetPageId: undefined },
+                      : { type: 'goto', targetPageId: '0' },
                 })
               }}
               className='w-full rounded border border-gray-300 px-3 py-2 text-sm'
@@ -714,7 +712,7 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
                 이동할 페이지
               </label>
               <select
-                value={selectedTouchArea.action.targetPageId || ''}
+                value={selectedTouchArea.action.targetPageId || '0'}
                 onChange={(e) =>
                   handleTouchAreaUpdate(selectedTouchArea.id, {
                     action: {
@@ -725,16 +723,14 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
                 }
                 className='w-full rounded border border-gray-300 px-3 py-2 text-sm'
               >
-                <option value=''>페이지 선택...</option>
                 {pages
-                  .filter((p) => p.id !== currentPageId)
+                  .filter((_, idx) => idx !== pages.findIndex((p) => p.id === currentPageId))
                   .map((page) => {
-                    const pageNumber =
-                      pages.findIndex((p) => p.id === page.id) + 1
-                    const displayTitle = page.title || `페이지 ${pageNumber}`
+                    const pageIndex = pages.findIndex((p) => p.id === page.id)
+                    const displayTitle = page.title || `페이지 ${pageIndex + 1}`
                     return (
-                      <option key={page.id} value={page.id}>
-                        {pageNumber}. {displayTitle}
+                      <option key={page.id} value={pageIndex.toString()}>
+                        {pageIndex + 1}. {displayTitle}
                       </option>
                     )
                   })}
