@@ -5,6 +5,8 @@ type EntryPageProps = {
   project: Project
   iconUrl?: string
   onStart: () => void
+  onExport?: () => void // 실행파일 내보내기 콜백 (Tauri 환경에서만 사용)
+  isExporting?: boolean // 내보내기 진행 중 여부
 }
 
 // 전체화면 토글 함수
@@ -30,8 +32,21 @@ const formatDate = (timestamp: number): string => {
   })
 }
 
-const EntryPage: React.FC<EntryPageProps> = ({ project, iconUrl, onStart }) => {
+const EntryPage: React.FC<EntryPageProps> = ({
+  project,
+  iconUrl,
+  onStart,
+  onExport,
+  isExporting = false,
+}) => {
   const [isFullscreen, setIsFullscreen] = useState(false)
+
+  const handleExport = (e: React.MouseEvent) => {
+    e.stopPropagation() // 부모 onClick 방지
+    if (onExport && !isExporting) {
+      onExport()
+    }
+  }
 
   // 전체화면 상태 감지
   useEffect(() => {
@@ -52,16 +67,30 @@ const EntryPage: React.FC<EntryPageProps> = ({ project, iconUrl, onStart }) => {
   return (
     <div
       className='absolute inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
-      onClick={onStart}
     >
-      {/* 전체화면 토글 버튼 */}
-      <button
-        onClick={handleToggleFullscreen}
-        className='absolute right-4 top-4 rounded-lg bg-gray-700 px-4 py-2 text-sm text-white transition-colors hover:bg-gray-600'
-        title={isFullscreen ? '전체화면 종료 (⌘+1)' : '전체화면 (⌘+1)'}
-      >
-        {isFullscreen ? '⛶ 창모드' : '⛶ 전체화면'}
-      </button>
+      {/* 상단 버튼들 */}
+      <div className='absolute right-4 top-4 flex gap-2'>
+        {/* 실행파일 내보내기 버튼 (onExport가 있을 때만 표시) */}
+        {onExport && (
+          <button
+            onClick={handleExport}
+            disabled={isExporting}
+            className='rounded-lg bg-green-600 px-4 py-2 text-sm text-white transition-colors hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-50'
+            title='실행파일로 내보내기'
+          >
+            {isExporting ? '⏳ 내보내는 중...' : '📦 실행파일로 내보내기'}
+          </button>
+        )}
+
+        {/* 전체화면 토글 버튼 */}
+        <button
+          onClick={handleToggleFullscreen}
+          className='rounded-lg bg-gray-700 px-4 py-2 text-sm text-white transition-colors hover:bg-gray-600'
+          title={isFullscreen ? '전체화면 종료 (⌘+1)' : '전체화면 (⌘+1)'}
+        >
+          {isFullscreen ? '⛶ 창모드' : '⛶ 전체화면'}
+        </button>
+      </div>
 
       {/* 프로젝트 정보 영역 */}
       <div className='flex max-w-2xl flex-col items-center px-8'>
@@ -117,7 +146,7 @@ const EntryPage: React.FC<EntryPageProps> = ({ project, iconUrl, onStart }) => {
         </button>
 
         <p className='mt-6 text-sm text-gray-400'>
-          화면을 터치하거나 버튼을 클릭하세요
+          시작하기 버튼을 클릭하세요
         </p>
 
         {/* 생성일/수정일 */}

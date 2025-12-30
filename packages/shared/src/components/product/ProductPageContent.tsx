@@ -14,6 +14,8 @@ export interface ProductPageContentProps {
   buttonImageUrls: Record<string, string>
   iconUrl?: string // 앱 아이콘 URL (옵션)
   onExit?: () => void // 종료 시 콜백 (옵션)
+  onExport?: () => void // 실행파일 내보내기 콜백 (옵션)
+  isExporting?: boolean // 내보내기 진행 중 여부 (옵션)
   emptyMessage?: string // 페이지가 없을 때 메시지 (옵션)
 }
 
@@ -23,6 +25,8 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
   buttonImageUrls,
   iconUrl,
   onExit,
+  onExport,
+  isExporting,
   emptyMessage = '페이지가 없습니다',
 }) => {
   const {
@@ -172,6 +176,8 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
           project={project}
           iconUrl={iconUrl}
           onStart={handleStartClick}
+          onExport={onExport}
+          isExporting={isExporting}
         />
       )}
 

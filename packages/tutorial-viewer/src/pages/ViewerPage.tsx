@@ -1,4 +1,7 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useState } from 'react'
+import { invoke } from '@tauri-apps/api/core'
+import { save } from '@tauri-apps/plugin-dialog'
+import JSZip from 'jszip'
 import {
   Footer,
   ErrorScreen,
@@ -14,11 +17,44 @@ interface ViewerPageProps {
   onFileSelect: (path: string) => void
 }
 
+interface ExportMediaFile {
+  id: string
+  name: string
+  mimeType: string
+  data: number[]
+}
+
+interface ExportRequest {
+  outputPath: string
+  projectJson: string
+  mediaFiles: ExportMediaFile[]
+  buttonFiles: ExportMediaFile[]
+  appIcon: number[] | null
+}
+
+// 확장자로 MIME 타입 추론
+const getMimeType = (ext: string): string => {
+  const mimeTypes: Record<string, string> = {
+    mp4: 'video/mp4',
+    webm: 'video/webm',
+    mov: 'video/quicktime',
+    avi: 'video/x-msvideo',
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    svg: 'image/svg+xml',
+  }
+  return mimeTypes[ext] || 'application/octet-stream'
+}
+
 const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
   const { project, mediaUrls, buttonImageUrls, iconUrl, isLoading, error } =
     useTutorialViewer(filePath)
 
   const [recentFiles, setRecentFiles] = React.useState<RecentFile[]>([])
+  const [isExporting, setIsExporting] = useState(false)
 
   // 최근 파일 목록 로드
   React.useEffect(() => {
@@ -69,6 +105,111 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
     },
     []
   )
+
+  // 실행파일 내보내기
+  const handleExport = useCallback(async () => {
+    if (!filePath || !project) return
+
+    setIsExporting(true)
+
+    try {
+      // 저장 경로 선택
+      const outputPath = await save({
+        defaultPath: `${project.appTitle || project.name}.exe`,
+        filters: [{ name: 'Executable', extensions: ['exe'] }],
+      })
+
+      if (!outputPath) {
+        setIsExporting(false)
+        return // 사용자가 취소함
+      }
+
+      // 튜토리얼 파일 다시 읽기
+      const { readFile } = await import('@tauri-apps/plugin-fs')
+      const fileData = await readFile(filePath)
+      const zip = await JSZip.loadAsync(fileData)
+
+      // 프로젝트 JSON
+      const projectFile = zip.file('project.json')
+      if (!projectFile) {
+        throw new Error('project.json not found')
+      }
+      const projectJson = await projectFile.async('text')
+
+      // 미디어 파일 수집
+      const mediaFiles: ExportMediaFile[] = []
+      for (const [path, file] of Object.entries(zip.files)) {
+        if (path.startsWith('media/') && !file.dir) {
+          const data = await file.async('uint8array')
+          const fileName = path.replace('media/', '')
+          const mediaId =
+            fileName.substring(0, fileName.lastIndexOf('.')) || fileName
+
+          // MIME 타입 추론
+          const ext = fileName.split('.').pop()?.toLowerCase() || ''
+          const mimeType = getMimeType(ext)
+
+          mediaFiles.push({
+            id: mediaId,
+            name: fileName,
+            mimeType,
+            data: Array.from(data),
+          })
+        }
+      }
+
+      // 버튼 이미지 수집
+      const buttonFiles: ExportMediaFile[] = []
+      for (const [path, file] of Object.entries(zip.files)) {
+        if (path.startsWith('buttons/') && !file.dir) {
+          const data = await file.async('uint8array')
+          const fileName = path.replace('buttons/', '')
+          const buttonId =
+            fileName.substring(0, fileName.lastIndexOf('.')) || fileName
+
+          const ext = fileName.split('.').pop()?.toLowerCase() || ''
+          const mimeType = getMimeType(ext)
+
+          buttonFiles.push({
+            id: buttonId,
+            name: fileName,
+            mimeType,
+            data: Array.from(data),
+          })
+        }
+      }
+
+      // 앱 아이콘 수집
+      let appIcon: number[] | null = null
+      for (const [path, file] of Object.entries(zip.files)) {
+        if (path.startsWith('icons/') && !file.dir) {
+          const data = await file.async('uint8array')
+          appIcon = Array.from(data)
+          break
+        }
+      }
+
+      // Rust 백엔드 호출
+      const request: ExportRequest = {
+        outputPath,
+        projectJson,
+        mediaFiles,
+        buttonFiles,
+        appIcon,
+      }
+
+      await invoke('export_as_executable', { request })
+
+      // 성공 알림
+      alert(`실행파일이 생성되었습니다:\n${outputPath}`)
+    } catch (err) {
+      console.error('Export failed:', err)
+      const message = err instanceof Error ? err.message : 'Export failed'
+      alert(`내보내기 실패: ${message}`)
+    } finally {
+      setIsExporting(false)
+    }
+  }, [filePath, project])
 
   // 파일이 선택되지 않은 상태 - 파일 선택 UI
   if (!filePath) {
@@ -151,6 +292,8 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ filePath, onFileSelect }) => {
       mediaUrls={mediaUrls}
       buttonImageUrls={buttonImageUrls}
       iconUrl={iconUrl}
+      onExport={handleExport}
+      isExporting={isExporting}
     />
   )
 }
