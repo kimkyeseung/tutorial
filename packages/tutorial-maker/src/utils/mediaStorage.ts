@@ -113,12 +113,23 @@ export const saveMediaFile = async (
   type: 'video' | 'image'
 ): Promise<string> => {
   const id = crypto.randomUUID()
+
+  // 동영상인 경우 썸네일 생성
+  let thumbnailBlob: Blob | undefined
+  if (type === 'video') {
+    const thumbnail = await generateVideoThumbnail(file)
+    if (thumbnail) {
+      thumbnailBlob = thumbnail
+    }
+  }
+
   const media: StoredMedia = {
     id,
     name: file.name,
     blob: file,
     type,
     createdAt: Date.now(),
+    thumbnailBlob,
   }
 
   const db = await initDB()
@@ -265,4 +276,86 @@ export const revokeBlobURL = (url: string): void => {
   if (url.startsWith('blob:')) {
     URL.revokeObjectURL(url)
   }
+}
+
+// 동영상 썸네일 생성 (첫 프레임 캡처)
+export const generateVideoThumbnail = (
+  videoBlob: Blob,
+  maxSize: number = 320
+): Promise<Blob | null> => {
+  return new Promise((resolve) => {
+    const video = document.createElement('video')
+    const blobUrl = URL.createObjectURL(videoBlob)
+
+    video.preload = 'metadata'
+    video.muted = true
+    video.playsInline = true
+
+    const cleanup = () => {
+      URL.revokeObjectURL(blobUrl)
+      video.remove()
+    }
+
+    video.onloadeddata = () => {
+      // 첫 프레임으로 이동
+      video.currentTime = 0
+    }
+
+    video.onseeked = () => {
+      try {
+        // Canvas에 비디오 프레임 그리기
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+
+        if (!ctx) {
+          cleanup()
+          resolve(null)
+          return
+        }
+
+        // 종횡비 유지하며 크기 조정
+        const aspectRatio = video.videoWidth / video.videoHeight
+        let width = maxSize
+        let height = maxSize
+
+        if (aspectRatio > 1) {
+          height = maxSize / aspectRatio
+        } else {
+          width = maxSize * aspectRatio
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        ctx.drawImage(video, 0, 0, width, height)
+
+        // JPEG로 변환 (작은 파일 크기)
+        canvas.toBlob(
+          (blob) => {
+            cleanup()
+            resolve(blob)
+          },
+          'image/jpeg',
+          0.8
+        )
+      } catch {
+        cleanup()
+        resolve(null)
+      }
+    }
+
+    video.onerror = () => {
+      cleanup()
+      resolve(null)
+    }
+
+    // 5초 타임아웃
+    setTimeout(() => {
+      cleanup()
+      resolve(null)
+    }, 5000)
+
+    video.src = blobUrl
+    video.load()
+  })
 }

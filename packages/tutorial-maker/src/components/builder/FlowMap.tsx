@@ -49,9 +49,10 @@ const FlowMap: React.FC<FlowMapProps> = ({
               // 이미지는 Data URL로 변환
               thumbnailUrl = await createBlobURL(media.blob)
             } else if (page.mediaType === 'video') {
-              // 비디오는 썸네일 캡처 불가 (Tauri WebView에서 blob URL 차단)
-              // null로 설정하여 플레이스홀더 표시
-              thumbnailUrl = null
+              // 동영상 썸네일 사용 (저장 시 생성됨)
+              if (media.thumbnailBlob) {
+                thumbnailUrl = await createBlobURL(media.thumbnailBlob)
+              }
             }
           }
         }

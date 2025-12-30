@@ -81,9 +81,10 @@ const PageList: React.FC<PageListProps> = ({
               // 이미지는 Data URL로 변환 (createBlobURL이 이미 처리함)
               url = await createBlobURL(media.blob)
             } else {
-              // 비디오는 썸네일 캡처 불가 (Tauri WebView에서 blob URL 차단)
-              // 빈 문자열로 설정하여 플레이스홀더 표시
-              url = ''
+              // 동영상 썸네일 사용 (저장 시 생성됨)
+              url = media.thumbnailBlob
+                ? await createBlobURL(media.thumbnailBlob)
+                : ''
             }
             newThumbnails[page.id] = {
               url,

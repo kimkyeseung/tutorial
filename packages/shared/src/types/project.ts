@@ -62,6 +62,7 @@ export interface StoredMedia {
   blob: Blob
   type: 'video' | 'image' | 'button' | 'icon'
   createdAt: number
+  thumbnailBlob?: Blob // 동영상 썸네일 (첫 프레임)
 }
 
 export interface EmbeddedMedia {
