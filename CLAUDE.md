@@ -139,3 +139,67 @@ The `usePageNavigation` hook manages page transitions:
 ## Build Dependencies
 - **player must be built before maker**: Maker uses `include_bytes!` to embed player.exe at compile time
 - Build order: `npm run build:player` → `npm run build:maker`
+
+## Export Architecture (Critical Implementation Details)
+
+### 단일 실행파일 내보내기 순서 (중요!)
+`export_as_executable` (lib.rs)에서 반드시 다음 순서를 지켜야 함:
+
+```rust
+// 1. 기본 실행 파일 생성 (viewer.exe 복사)
+prepare_base_executable(&output_path)?;
+
+// 2. 앱 아이콘 설정 (rcedit) - 데이터 임베딩 전에 수행!
+if let Some(ref icon_data) = request.app_icon {
+    set_executable_icon(&app, &output_path, icon_data)?;
+}
+
+// 3. 임베딩 데이터 추가 (아이콘 설정 후)
+append_embedded_data(...)?;
+```
+
+**이유**: rcedit가 PE 파일을 수정할 때 파일 끝에 추가된 바이너리 데이터를 손상시킴.
+아이콘 설정 후 데이터를 추가해야 매직 바이트와 매니페스트가 보존됨.
+
+### 대용량 파일 내보내기 (해결됨)
+- **문제**: `Array.from(new Uint8Array())` → 메모리 8배 증가 → "Invalid string length" 오류
+- **해결**: 10MB 이상 파일은 임시 파일로 저장 후 경로만 전달
+- **임계값**: `LARGE_FILE_THRESHOLD = 10 * 1024 * 1024` (ProductPage.tsx, BuilderPage.tsx)
+- **Rust**: `MediaSource` enum으로 Data/Path 분기 처리, 64KB 버퍼로 스트리밍 읽기
+
+### 바이너리 구조
+```
+[VIEWER_EXE][media files][buttons][icon data][project JSON][manifest JSON][manifest size (8 bytes)][magic bytes "VISTUT_V1"]
+```
+
+- `append_embedded_data`는 `fs::metadata`로 현재 파일 크기를 가져와 시작 오프셋으로 사용
+- 이렇게 해야 rcedit가 파일 크기를 변경해도 올바른 오프셋 계산 가능
+
+## Common Pitfalls (주의사항)
+
+### 1. 내보내기 순서 변경 금지
+```
+❌ 잘못된 순서: 데이터 임베딩 → 아이콘 설정
+✅ 올바른 순서: viewer.exe 복사 → 아이콘 설정 → 데이터 임베딩
+```
+- rcedit가 PE 파일을 수정하면 파일 끝에 추가된 데이터가 손상됨
+- `lib.rs`의 `export_as_executable` 함수 순서 참조
+
+### 2. 대용량 파일 직접 전달 금지
+```typescript
+// ❌ 잘못된 방법 (메모리 폭발)
+data: Array.from(new Uint8Array(arrayBuffer))
+
+// ✅ 올바른 방법 (10MB 이상)
+path: await saveBlobToTempFile(blob, filename)
+```
+- `LARGE_FILE_THRESHOLD` (10MB) 이상은 반드시 임시 파일 사용
+- ProductPage.tsx, BuilderPage.tsx의 JSDoc 주석 참조
+
+### 3. 빌드 순서
+```bash
+npm run build:player  # 반드시 먼저!
+npm run build:maker   # player.exe 임베드
+```
+- maker는 빌드 시점에 player.exe를 `include_bytes!`로 임베드
+- player가 없거나 오래되면 내보내기 기능 오작동

@@ -16,12 +16,30 @@ import {
   createBlobURL,
 } from '../utils/mediaStorage'
 import { validateAllPages } from '../utils/pageValidation'
+import { saveBlobToTempFile } from '../utils/tempFile'
+
+/**
+ * 대용량 파일 임계값 (10MB)
+ *
+ * ⚠️ 중요: 이 값 이상의 파일은 반드시 임시 파일로 저장해야 함!
+ *
+ * 이유:
+ * - Array.from(new Uint8Array(arrayBuffer))는 바이너리를 숫자 배열로 변환
+ * - JSON 직렬화 시 메모리가 원본의 ~8배로 증가
+ * - V8 엔진의 문자열 최대 길이(~512MB) 초과 시 "Invalid string length" 오류 발생
+ *
+ * 해결:
+ * - 대용량 파일은 saveBlobToTempFile()로 임시 파일 저장
+ * - Rust 백엔드에서 64KB 버퍼로 스트리밍 읽기
+ */
+const LARGE_FILE_THRESHOLD = 10 * 1024 * 1024
 
 interface ExportMediaFile {
   id: string
   name: string
   mimeType: string
-  data: number[]
+  data?: number[] // 소용량 파일용
+  path?: string // 대용량 파일용 (임시 파일 경로)
 }
 
 interface ExportRequest {
@@ -251,22 +269,36 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
         return
       }
 
+      // 미디어 파일 수집 (대용량은 임시 파일로 저장)
       const mediaFiles: ExportMediaFile[] = []
       for (const page of selectedProject.pages) {
         if (page.mediaId) {
           const media = await getMediaFile(page.mediaId)
           if (media) {
-            const arrayBuffer = await media.blob.arrayBuffer()
-            mediaFiles.push({
-              id: media.id,
-              name: media.name,
-              mimeType: media.blob.type,
-              data: Array.from(new Uint8Array(arrayBuffer)),
-            })
+            if (media.blob.size >= LARGE_FILE_THRESHOLD) {
+              // 대용량 파일: 임시 파일로 저장하고 경로 전달
+              const tempPath = await saveBlobToTempFile(media.blob, media.name)
+              mediaFiles.push({
+                id: media.id,
+                name: media.name,
+                mimeType: media.blob.type,
+                path: tempPath,
+              })
+            } else {
+              // 소용량 파일: 메모리에서 직접 전달
+              const arrayBuffer = await media.blob.arrayBuffer()
+              mediaFiles.push({
+                id: media.id,
+                name: media.name,
+                mimeType: media.blob.type,
+                data: Array.from(new Uint8Array(arrayBuffer)),
+              })
+            }
           }
         }
       }
 
+      // 버튼 이미지 수집 (일반적으로 소용량)
       const buttonFiles: ExportMediaFile[] = []
       const processedButtonIds = new Set<string>()
       for (const page of selectedProject.pages) {
@@ -275,13 +307,26 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
             processedButtonIds.add(button.imageId)
             const image = await getButtonImage(button.imageId)
             if (image) {
-              const arrayBuffer = await image.blob.arrayBuffer()
-              buttonFiles.push({
-                id: image.id,
-                name: image.name,
-                mimeType: image.blob.type,
-                data: Array.from(new Uint8Array(arrayBuffer)),
-              })
+              if (image.blob.size >= LARGE_FILE_THRESHOLD) {
+                const tempPath = await saveBlobToTempFile(
+                  image.blob,
+                  image.name
+                )
+                buttonFiles.push({
+                  id: image.id,
+                  name: image.name,
+                  mimeType: image.blob.type,
+                  path: tempPath,
+                })
+              } else {
+                const arrayBuffer = await image.blob.arrayBuffer()
+                buttonFiles.push({
+                  id: image.id,
+                  name: image.name,
+                  mimeType: image.blob.type,
+                  data: Array.from(new Uint8Array(arrayBuffer)),
+                })
+              }
             }
           }
         }
