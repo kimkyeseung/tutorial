@@ -35,7 +35,8 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "resources/rcedit-x64.exe"
+      "resources/rcedit-x64.exe",
+      "resources/ffmpeg.exe"
     ]
   }
 }
