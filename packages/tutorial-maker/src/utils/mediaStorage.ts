@@ -287,27 +287,29 @@ export const generateVideoThumbnail = (
     const video = document.createElement('video')
     const blobUrl = URL.createObjectURL(videoBlob)
 
-    video.preload = 'metadata'
+    video.preload = 'auto'
     video.muted = true
     video.playsInline = true
+    video.crossOrigin = 'anonymous'
 
+    let resolved = false
     const cleanup = () => {
+      if (!resolved) {
+        resolved = true
+      }
       URL.revokeObjectURL(blobUrl)
       video.remove()
     }
 
-    video.onloadeddata = () => {
-      // 첫 프레임으로 이동
-      video.currentTime = 0
-    }
+    const captureFrame = () => {
+      if (resolved) return
 
-    video.onseeked = () => {
       try {
         // Canvas에 비디오 프레임 그리기
         const canvas = document.createElement('canvas')
         const ctx = canvas.getContext('2d')
 
-        if (!ctx) {
+        if (!ctx || video.videoWidth === 0 || video.videoHeight === 0) {
           cleanup()
           resolve(null)
           return
@@ -332,6 +334,7 @@ export const generateVideoThumbnail = (
         // JPEG로 변환 (작은 파일 크기)
         canvas.toBlob(
           (blob) => {
+            resolved = true
             cleanup()
             resolve(blob)
           },
@@ -344,6 +347,27 @@ export const generateVideoThumbnail = (
       }
     }
 
+    // canplaythrough: 충분히 버퍼링되어 재생 가능한 상태
+    video.oncanplaythrough = () => {
+      // 약간의 시간(0.1초)으로 이동하여 첫 프레임 확보
+      // currentTime = 0은 일부 브라우저에서 onseeked가 발생하지 않을 수 있음
+      video.currentTime = 0.1
+    }
+
+    video.onseeked = () => {
+      captureFrame()
+    }
+
+    // loadeddata에서도 시도 (onseeked가 발생하지 않는 경우 대비)
+    video.onloadeddata = () => {
+      // 짧은 지연 후 캡처 시도 (onseeked가 발생하지 않는 경우)
+      setTimeout(() => {
+        if (!resolved && video.readyState >= 2) {
+          captureFrame()
+        }
+      }, 500)
+    }
+
     video.onerror = () => {
       cleanup()
       resolve(null)
@@ -351,8 +375,10 @@ export const generateVideoThumbnail = (
 
     // 5초 타임아웃
     setTimeout(() => {
-      cleanup()
-      resolve(null)
+      if (!resolved) {
+        cleanup()
+        resolve(null)
+      }
     }, 5000)
 
     video.src = blobUrl

@@ -36,7 +36,6 @@ const SortablePageItem: React.FC<SortablePageItemProps> = ({
     transition,
     isDragging,
   } = useSortable({ id: page.id })
-  console.log(page)
 
   const style = {
     transform: CSS.Transform.toString(transform),

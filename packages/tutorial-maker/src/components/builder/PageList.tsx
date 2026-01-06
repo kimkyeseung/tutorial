@@ -14,7 +14,11 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { ConfirmDialog, type Page } from '@viswave/shared'
-import { getMediaFile, createBlobURL } from '../../utils/mediaStorage'
+import {
+  getMediaFile,
+  createBlobURL,
+  generateVideoThumbnail,
+} from '../../utils/mediaStorage'
 import SortablePageItem from './SortablePageItem'
 
 type PageListProps = {
@@ -80,10 +84,15 @@ const PageList: React.FC<PageListProps> = ({
               // 이미지는 Data URL로 변환 (createBlobURL이 이미 처리함)
               url = await createBlobURL(media.blob)
             } else {
-              // 동영상 썸네일 사용 (저장 시 생성됨)
-              url = media.thumbnailBlob
-                ? await createBlobURL(media.thumbnailBlob)
-                : ''
+              // 동영상 썸네일 사용
+              if (media.thumbnailBlob) {
+                // 저장된 썸네일이 있으면 사용
+                url = await createBlobURL(media.thumbnailBlob)
+              } else {
+                // 저장된 썸네일이 없으면 실시간으로 생성
+                const thumbnail = await generateVideoThumbnail(media.blob)
+                url = thumbnail ? await createBlobURL(thumbnail) : ''
+              }
             }
             newThumbnails[page.id] = {
               url,
