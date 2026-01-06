@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import type { Page } from '@viswave/shared'
-import { getMediaFile, createBlobURL, revokeBlobURL } from '../../utils/mediaStorage'
+import {
+  getMediaFile,
+  createBlobURL,
+  revokeBlobURL,
+} from '../../utils/mediaStorage'
 import { validatePage } from '../../utils/pageValidation'
 
 type FlowMapProps = {

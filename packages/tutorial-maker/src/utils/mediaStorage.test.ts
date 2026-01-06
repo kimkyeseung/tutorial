@@ -2,14 +2,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { generateVideoThumbnail } from './mediaStorage'
 
 // Mock video element for testing
-const createMockVideoElement = (options: {
-  videoWidth?: number
-  videoHeight?: number
-  shouldError?: boolean
-  shouldTimeout?: boolean
-  skipCanPlayThrough?: boolean
-  skipSeeked?: boolean
-} = {}) => {
+const createMockVideoElement = (
+  options: {
+    videoWidth?: number
+    videoHeight?: number
+    shouldError?: boolean
+    shouldTimeout?: boolean
+    skipCanPlayThrough?: boolean
+    skipSeeked?: boolean
+  } = {}
+) => {
   const {
     videoWidth = 1920,
     videoHeight = 1080,
@@ -130,7 +132,8 @@ describe('generateVideoThumbnail', () => {
 
       document.createElement = vi.fn((tagName: string) => {
         if (tagName === 'video') return mockVideo as unknown as HTMLVideoElement
-        if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement
+        if (tagName === 'canvas')
+          return mockCanvas as unknown as HTMLCanvasElement
         return originalCreateElement.call(document, tagName)
       })
 
@@ -152,13 +155,14 @@ describe('generateVideoThumbnail', () => {
     it('should use fallback loadeddata event when onseeked does not fire', async () => {
       const mockVideo = createMockVideoElement({
         skipCanPlayThrough: true,
-        skipSeeked: true
+        skipSeeked: true,
       })
       const { mockCanvas, mockContext } = createMockCanvas()
 
       document.createElement = vi.fn((tagName: string) => {
         if (tagName === 'video') return mockVideo as unknown as HTMLVideoElement
-        if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement
+        if (tagName === 'canvas')
+          return mockCanvas as unknown as HTMLCanvasElement
         return originalCreateElement.call(document, tagName)
       })
 
@@ -175,12 +179,16 @@ describe('generateVideoThumbnail', () => {
     })
 
     it('should respect maxSize parameter for landscape video', async () => {
-      const mockVideo = createMockVideoElement({ videoWidth: 1920, videoHeight: 1080 })
+      const mockVideo = createMockVideoElement({
+        videoWidth: 1920,
+        videoHeight: 1080,
+      })
       const { mockCanvas } = createMockCanvas()
 
       document.createElement = vi.fn((tagName: string) => {
         if (tagName === 'video') return mockVideo as unknown as HTMLVideoElement
-        if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement
+        if (tagName === 'canvas')
+          return mockCanvas as unknown as HTMLCanvasElement
         return originalCreateElement.call(document, tagName)
       })
 
@@ -197,12 +205,16 @@ describe('generateVideoThumbnail', () => {
     })
 
     it('should respect maxSize parameter for portrait video', async () => {
-      const mockVideo = createMockVideoElement({ videoWidth: 1080, videoHeight: 1920 })
+      const mockVideo = createMockVideoElement({
+        videoWidth: 1080,
+        videoHeight: 1920,
+      })
       const { mockCanvas } = createMockCanvas()
 
       document.createElement = vi.fn((tagName: string) => {
         if (tagName === 'video') return mockVideo as unknown as HTMLVideoElement
-        if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement
+        if (tagName === 'canvas')
+          return mockCanvas as unknown as HTMLCanvasElement
         return originalCreateElement.call(document, tagName)
       })
 
@@ -245,7 +257,8 @@ describe('generateVideoThumbnail', () => {
 
       document.createElement = vi.fn((tagName: string) => {
         if (tagName === 'video') return mockVideo as unknown as HTMLVideoElement
-        if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement
+        if (tagName === 'canvas')
+          return mockCanvas as unknown as HTMLCanvasElement
         return originalCreateElement.call(document, tagName)
       })
 
@@ -260,12 +273,16 @@ describe('generateVideoThumbnail', () => {
     })
 
     it('should return null when video dimensions are zero', async () => {
-      const mockVideo = createMockVideoElement({ videoWidth: 0, videoHeight: 0 })
+      const mockVideo = createMockVideoElement({
+        videoWidth: 0,
+        videoHeight: 0,
+      })
       const { mockCanvas } = createMockCanvas()
 
       document.createElement = vi.fn((tagName: string) => {
         if (tagName === 'video') return mockVideo as unknown as HTMLVideoElement
-        if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement
+        if (tagName === 'canvas')
+          return mockCanvas as unknown as HTMLCanvasElement
         return originalCreateElement.call(document, tagName)
       })
 
@@ -307,7 +324,8 @@ describe('generateVideoThumbnail', () => {
 
       document.createElement = vi.fn((tagName: string) => {
         if (tagName === 'video') return mockVideo as unknown as HTMLVideoElement
-        if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement
+        if (tagName === 'canvas')
+          return mockCanvas as unknown as HTMLCanvasElement
         return originalCreateElement.call(document, tagName)
       })
 
@@ -326,7 +344,8 @@ describe('generateVideoThumbnail', () => {
 
       document.createElement = vi.fn((tagName: string) => {
         if (tagName === 'video') return mockVideo as unknown as HTMLVideoElement
-        if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement
+        if (tagName === 'canvas')
+          return mockCanvas as unknown as HTMLCanvasElement
         return originalCreateElement.call(document, tagName)
       })
 
@@ -347,7 +366,8 @@ describe('generateVideoThumbnail', () => {
 
       document.createElement = vi.fn((tagName: string) => {
         if (tagName === 'video') return mockVideo as unknown as HTMLVideoElement
-        if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement
+        if (tagName === 'canvas')
+          return mockCanvas as unknown as HTMLCanvasElement
         return originalCreateElement.call(document, tagName)
       })
 
@@ -371,7 +391,8 @@ describe('generateVideoThumbnail', () => {
 
       document.createElement = vi.fn((tagName: string) => {
         if (tagName === 'video') return mockVideo as unknown as HTMLVideoElement
-        if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement
+        if (tagName === 'canvas')
+          return mockCanvas as unknown as HTMLCanvasElement
         return originalCreateElement.call(document, tagName)
       })
 

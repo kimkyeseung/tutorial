@@ -8,14 +8,14 @@
  */
 export function setFavicon(iconUrl: string): void {
   // 기존 파비콘 링크 찾기 또는 새로 생성
-  let link = document.querySelector<HTMLLinkElement>("link[rel*='icon']")
+  let link = document.querySelector<HTMLLinkElement>("link[rel*='icon']");
   if (!link) {
-    link = document.createElement('link')
-    link.rel = 'icon'
-    document.head.appendChild(link)
+    link = document.createElement("link");
+    link.rel = "icon";
+    document.head.appendChild(link);
   }
-  link.type = 'image/png'
-  link.href = iconUrl
+  link.type = "image/png";
+  link.href = iconUrl;
 }
 
 /**
@@ -23,5 +23,5 @@ export function setFavicon(iconUrl: string): void {
  * @param title - 설정할 타이틀
  */
 export function setDocumentTitle(title: string): void {
-  document.title = title
+  document.title = title;
 }

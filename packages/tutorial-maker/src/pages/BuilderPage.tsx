@@ -370,7 +370,13 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
       alert(`실행파일이 생성되었습니다: ${outputPath}`)
     } catch (error) {
       console.error('Build failed:', error)
-      const errorMessage = typeof error === 'string' ? error : error instanceof Error ? error.message : String(error); alert('빌드에 실패했습니다: ' + errorMessage)
+      const errorMessage =
+        typeof error === 'string'
+          ? error
+          : error instanceof Error
+            ? error.message
+            : String(error)
+      alert('빌드에 실패했습니다: ' + errorMessage)
     } finally {
       setIsBuilding(false)
     }

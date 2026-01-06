@@ -26,7 +26,11 @@ const QUALITY_OPTIONS: {
 }[] = [
   { value: 'low', label: '저용량', description: '작은 파일 크기, 낮은 화질' },
   { value: 'medium', label: '균형', description: '적당한 크기와 화질' },
-  { value: 'high', label: '고품질', description: '높은 화질, 큰 파일 크기 (권장)' },
+  {
+    value: 'high',
+    label: '고품질',
+    description: '높은 화질, 큰 파일 크기 (권장)',
+  },
 ]
 
 const RESOLUTION_OPTIONS: { value: number | undefined; label: string }[] = [
@@ -89,7 +93,9 @@ const BuildDialog: React.FC<BuildDialogProps> = ({
 
         {isBuilding ? (
           <div className='py-6'>
-            <h3 className='mb-4 text-center text-lg font-semibold'>빌드 중...</h3>
+            <h3 className='mb-4 text-center text-lg font-semibold'>
+              빌드 중...
+            </h3>
 
             {/* 진행 상황 표시 (압축 활성화 시) */}
             {enabled && progress ? (
@@ -97,7 +103,9 @@ const BuildDialog: React.FC<BuildDialogProps> = ({
                 {/* 전체 진행률 */}
                 <div className='space-y-2'>
                   <div className='flex items-center justify-between text-sm'>
-                    <span className='font-medium text-gray-700'>전체 진행률</span>
+                    <span className='font-medium text-gray-700'>
+                      전체 진행률
+                    </span>
                     <span className='font-bold text-purple-600'>
                       {progress.percent.toFixed(1)}%
                     </span>

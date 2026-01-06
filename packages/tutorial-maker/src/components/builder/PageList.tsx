@@ -92,7 +92,9 @@ const PageList: React.FC<PageListProps> = ({
           (!existingThumbnail || existingThumbnail.mediaId !== page.mediaId)
 
         if (!needsReload) {
-          return existingThumbnail ? { pageId: page.id, data: existingThumbnail } : null
+          return existingThumbnail
+            ? { pageId: page.id, data: existingThumbnail }
+            : null
         }
 
         // 기존 URL 정리
@@ -178,7 +180,9 @@ const PageList: React.FC<PageListProps> = ({
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}
         title='페이지 삭제'
-        message={'페이지 ' + (deleteConfirm.pageIndex + 1) + '을(를) 삭제하시겠습니까?'}
+        message={
+          '페이지 ' + (deleteConfirm.pageIndex + 1) + '을(를) 삭제하시겠습니까?'
+        }
         confirmText='삭제'
         cancelText='취소'
         onConfirm={() => {
