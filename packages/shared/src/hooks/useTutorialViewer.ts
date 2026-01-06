@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Project } from "../types/project";
 import {
   loadTutorialFile,
@@ -31,14 +31,23 @@ export function useTutorialViewer(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // URL 정리 함수
+  // URL 참조를 ref로 유지 (cleanup 시 stale closure 방지)
+  const urlsRef = useRef({ mediaUrls, buttonImageUrls, iconUrl });
+
+  // URL 상태가 변경될 때마다 ref 업데이트
+  useEffect(() => {
+    urlsRef.current = { mediaUrls, buttonImageUrls, iconUrl };
+  }, [mediaUrls, buttonImageUrls, iconUrl]);
+
+  // URL 정리 함수 (현재 ref 값 사용)
   const cleanup = useCallback(() => {
+    const { mediaUrls, buttonImageUrls, iconUrl } = urlsRef.current;
     revokeMediaUrls(mediaUrls);
     revokeMediaUrls(buttonImageUrls);
     if (iconUrl) {
       URL.revokeObjectURL(iconUrl);
     }
-  }, [mediaUrls, buttonImageUrls, iconUrl]);
+  }, []);
 
   // 파일 경로로 로드 (Tauri 환경)
   const loadFromPath = useCallback(async (filePath: string) => {
@@ -108,7 +117,7 @@ export function useTutorialViewer(
     return () => {
       cleanup();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cleanup]);
 
   return {
     project,
