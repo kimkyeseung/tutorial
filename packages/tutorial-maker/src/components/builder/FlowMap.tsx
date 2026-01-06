@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import type { Page } from '@viswave/shared'
-import { getMediaFile, createBlobURL } from '../../utils/mediaStorage'
+import { getMediaFile, createBlobURL, revokeBlobURL } from '../../utils/mediaStorage'
 import { validatePage } from '../../utils/pageValidation'
 
 type FlowMapProps = {
@@ -33,43 +33,64 @@ const FlowMap: React.FC<FlowMapProps> = ({
   const [hoveredPage, setHoveredPage] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // 썸네일 로드
+  // 썸네일 로드 (병렬 처리 + cleanup)
   useEffect(() => {
-    const loadThumbnails = async () => {
-      const thumbs: PageThumbnail[] = []
+    let isCancelled = false
 
-      for (let i = 0; i < pages.length; i++) {
-        const page = pages[i]
+    const loadThumbnails = async () => {
+      // 이전 썸네일 URL 정리
+      thumbnails.forEach((thumb) => {
+        if (thumb.thumbnailUrl) {
+          revokeBlobURL(thumb.thumbnailUrl)
+        }
+      })
+
+      // 병렬로 썸네일 로드
+      const thumbPromises = pages.map(async (page, i) => {
         let thumbnailUrl: string | null = null
 
         if (page.mediaId) {
           const media = await getMediaFile(page.mediaId)
-          if (media) {
+          if (media && !isCancelled) {
             if (page.mediaType === 'image') {
-              // 이미지는 Data URL로 변환
               thumbnailUrl = await createBlobURL(media.blob)
-            } else if (page.mediaType === 'video') {
-              // 동영상 썸네일 사용 (저장 시 생성됨)
-              if (media.thumbnailBlob) {
-                thumbnailUrl = await createBlobURL(media.thumbnailBlob)
-              }
+            } else if (page.mediaType === 'video' && media.thumbnailBlob) {
+              thumbnailUrl = await createBlobURL(media.thumbnailBlob)
             }
           }
         }
 
-        thumbs.push({
+        return {
           pageId: page.id,
           pageIndex: i,
           thumbnailUrl,
           mediaType: page.mediaType,
-        })
-      }
+        } as PageThumbnail
+      })
 
-      setThumbnails(thumbs)
+      const thumbs = await Promise.all(thumbPromises)
+      if (!isCancelled) {
+        setThumbnails(thumbs)
+      }
     }
 
     loadThumbnails()
-  }, [pages])
+
+    return () => {
+      isCancelled = true
+    }
+  }, [pages]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 컴포넌트 언마운트 시 썸네일 URL 정리
+  useEffect(() => {
+    return () => {
+      thumbnails.forEach((thumb) => {
+        if (thumb.thumbnailUrl) {
+          revokeBlobURL(thumb.thumbnailUrl)
+        }
+      })
+    }
+  }, [thumbnails])
 
   // 연결 정보 계산
   useEffect(() => {
