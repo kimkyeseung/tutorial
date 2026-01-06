@@ -6,6 +6,7 @@ interface BuildProgress {
   current: number
   total: number
   percent: number
+  videoPercent: number
   fileName: string
   stage: string
 }
@@ -92,29 +93,40 @@ const BuildDialog: React.FC<BuildDialogProps> = ({
 
             {/* 진행 상황 표시 (압축 활성화 시) */}
             {enabled && progress ? (
-              <div className='space-y-3'>
-                {/* 프로그레스바 */}
-                <div className='h-4 w-full overflow-hidden rounded-full bg-gray-200'>
-                  <div
-                    className='h-full rounded-full bg-purple-600 transition-all duration-300'
-                    style={{ width: `${progress.percent}%` }}
-                  />
+              <div className='space-y-4'>
+                {/* 전체 진행률 */}
+                <div className='space-y-2'>
+                  <div className='flex items-center justify-between text-sm'>
+                    <span className='font-medium text-gray-700'>전체 진행률</span>
+                    <span className='font-bold text-purple-600'>
+                      {progress.percent.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className='h-3 w-full overflow-hidden rounded-full bg-gray-200'>
+                    <div
+                      className='h-full rounded-full bg-purple-600 transition-all duration-150'
+                      style={{ width: `${progress.percent}%` }}
+                    />
+                  </div>
                 </div>
 
-                {/* 진행 상황 텍스트 */}
-                <div className='flex items-center justify-between text-sm'>
-                  <span className='font-medium text-gray-700'>
-                    {progress.current}/{progress.total}
-                  </span>
-                  <span className='font-bold text-purple-600'>
-                    {progress.percent.toFixed(2)}%
-                  </span>
+                {/* 현재 영상 진행률 */}
+                <div className='space-y-2'>
+                  <div className='flex items-center justify-between text-sm'>
+                    <span className='max-w-[200px] truncate font-medium text-gray-700'>
+                      {progress.current}/{progress.total} - {progress.fileName}
+                    </span>
+                    <span className='font-semibold text-purple-500'>
+                      {progress.videoPercent.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className='h-2 w-full overflow-hidden rounded-full bg-gray-200'>
+                    <div
+                      className='h-full rounded-full bg-purple-400 transition-all duration-150'
+                      style={{ width: `${progress.videoPercent}%` }}
+                    />
+                  </div>
                 </div>
-
-                {/* 현재 파일명 */}
-                <p className='truncate text-center text-sm text-gray-500'>
-                  압축 중: {progress.fileName}
-                </p>
               </div>
             ) : enabled ? (
               <div className='space-y-3'>

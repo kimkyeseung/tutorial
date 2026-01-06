@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tauri::{Emitter, Manager};
 use video::{
-    compress_video, find_ffmpeg_path, get_temp_compressed_path, is_video_file,
-    CompressionSettings,
+    compress_video_with_progress, find_ffmpeg_path, get_temp_compressed_path, get_video_duration,
+    is_video_file, CompressionSettings,
 };
 
 /// 빌드 진행 상황 이벤트
@@ -20,8 +20,10 @@ struct BuildProgress {
     current: usize,
     /// 전체 파일 수
     total: usize,
-    /// 진행률 (0.0 ~ 100.0)
+    /// 전체 진행률 (0.0 ~ 100.0)
     percent: f64,
+    /// 현재 영상의 진행률 (0.0 ~ 100.0)
+    video_percent: f64,
     /// 현재 처리 중인 파일명
     file_name: String,
     /// 현재 단계
@@ -112,34 +114,25 @@ fn export_as_executable(app: tauri::AppHandle, request: ExportRequest) -> Result
     };
 
     // 미디어 파일 처리 (압축 적용)
-    let mut processed_count = 0usize;
+    let mut current_video_index = 0usize;
     let mut media_files: Vec<(String, String, String, MediaSource)> = Vec::new();
 
     for file in request.media_files {
         let is_video = is_video_file(&file.mime_type);
-        let file_name = file.name.clone();
 
-        // 진행 상황 emit (영상 압축 시에만)
+        // 영상 파일이면 인덱스 증가
         if compression_enabled && is_video {
-            processed_count += 1;
-            let percent = (processed_count as f64 / total_videos as f64) * 100.0;
-            let _ = app.emit(
-                "build-progress",
-                BuildProgress {
-                    current: processed_count,
-                    total: total_videos,
-                    percent,
-                    file_name: file_name.clone(),
-                    stage: "compressing".to_string(),
-                },
-            );
+            current_video_index += 1;
         }
 
         let result = process_media_file_for_export(
+            &app,
             file,
             &request.compression,
             &ffmpeg_path,
             &mut compressed_temp_files,
+            current_video_index,
+            total_videos,
         )?;
         media_files.push(result);
     }
@@ -186,10 +179,13 @@ fn export_as_executable(app: tauri::AppHandle, request: ExportRequest) -> Result
 
 /// 미디어 파일 처리 (압축 적용)
 fn process_media_file_for_export(
+    app: &tauri::AppHandle,
     file: ExportMediaFile,
     compression: &Option<CompressionSettings>,
     ffmpeg_path: &Option<PathBuf>,
     compressed_temp_files: &mut Vec<String>,
+    current_video_index: usize,
+    total_videos: usize,
 ) -> Result<(String, String, String, MediaSource), String> {
     // 압축이 비활성화되었거나 영상 파일이 아니면 그대로 반환
     let should_compress = compression
@@ -221,8 +217,39 @@ fn process_media_file_for_export(
     // 압축 출력 경로
     let output_path = get_temp_compressed_path(&file.name);
 
-    // 압축 실행
-    match compress_video(ffmpeg, &input_path, &output_path, settings) {
+    // 영상 길이 가져오기
+    let duration_secs = get_video_duration(ffmpeg, &input_path).unwrap_or(0.0);
+
+    // 진행률 콜백용 데이터
+    let file_name = file.name.clone();
+    let app_handle = app.clone();
+
+    // 압축 실행 (진행률 콜백 포함)
+    match compress_video_with_progress(
+        ffmpeg,
+        &input_path,
+        &output_path,
+        settings,
+        duration_secs,
+        |video_percent| {
+            // 전체 진행률 = (완료된 영상 수 + 현재 영상 진행률/100) / 전체 영상 수 * 100
+            let overall_percent = ((current_video_index - 1) as f64 + video_percent / 100.0)
+                / total_videos as f64
+                * 100.0;
+
+            let _ = app_handle.emit(
+                "build-progress",
+                BuildProgress {
+                    current: current_video_index,
+                    total: total_videos,
+                    percent: overall_percent,
+                    video_percent,
+                    file_name: file_name.clone(),
+                    stage: "compressing".to_string(),
+                },
+            );
+        },
+    ) {
         Ok(result) => {
             log::info!(
                 "Video compressed: {} ({:.1}% reduction)",

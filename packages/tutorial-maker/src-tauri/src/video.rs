@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use tauri::Manager;
@@ -130,38 +131,78 @@ pub fn is_video_file(mime_type: &str) -> bool {
     mime_type.starts_with("video/")
 }
 
-/// 영상 압축 실행
-pub fn compress_video(
+/// 영상 길이(duration) 가져오기 (초 단위)
+pub fn get_video_duration(ffmpeg_path: &Path, input_path: &Path) -> Result<f64, String> {
+    // ffprobe 대신 ffmpeg -i 로 duration 얻기
+    let output = Command::new(ffmpeg_path)
+        .args(["-i", &input_path.to_string_lossy(), "-f", "null", "-"])
+        .stderr(Stdio::piped())
+        .output()
+        .map_err(|e| format!("Failed to get video duration: {}", e))?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    // Duration: 00:00:10.50 형식 파싱
+    for line in stderr.lines() {
+        if line.contains("Duration:") {
+            if let Some(duration_str) = line.split("Duration:").nth(1) {
+                if let Some(time_str) = duration_str.split(',').next() {
+                    let time_str = time_str.trim();
+                    // HH:MM:SS.ms 파싱
+                    let parts: Vec<&str> = time_str.split(':').collect();
+                    if parts.len() == 3 {
+                        let hours: f64 = parts[0].parse().unwrap_or(0.0);
+                        let minutes: f64 = parts[1].parse().unwrap_or(0.0);
+                        let seconds: f64 = parts[2].parse().unwrap_or(0.0);
+                        return Ok(hours * 3600.0 + minutes * 60.0 + seconds);
+                    }
+                }
+            }
+        }
+    }
+
+    // Duration을 찾지 못하면 기본값 반환
+    Ok(0.0)
+}
+
+/// 영상 압축 실행 (진행률 콜백 포함)
+pub fn compress_video_with_progress<F>(
     ffmpeg_path: &Path,
     input_path: &Path,
     output_path: &Path,
     settings: &CompressionSettings,
-) -> Result<CompressionResult, String> {
+    duration_secs: f64,
+    mut on_progress: F,
+) -> Result<CompressionResult, String>
+where
+    F: FnMut(f64), // 진행률 (0.0 ~ 100.0)
+{
     let original_size = std::fs::metadata(input_path)
         .map_err(|e| format!("Failed to get input file size: {}", e))?
         .len();
 
     let mut args = vec![
-        "-y".to_string(),                    // 덮어쓰기 허용
-        "-i".to_string(),                    // 입력 파일
+        "-y".to_string(),           // 덮어쓰기 허용
+        "-progress".to_string(),    // 진행률 출력
+        "pipe:1".to_string(),       // stdout으로 출력
+        "-i".to_string(),           // 입력 파일
         input_path.to_string_lossy().to_string(),
-        "-c:v".to_string(),                  // 비디오 코덱
-        "libx264".to_string(),               // H.264
-        "-preset".to_string(),               // 인코딩 속도
+        "-c:v".to_string(),         // 비디오 코덱
+        "libx264".to_string(),      // H.264
+        "-preset".to_string(),      // 인코딩 속도
         settings.quality.preset().to_string(),
-        "-crf".to_string(),                  // 품질 설정
+        "-crf".to_string(),         // 품질 설정
         settings.quality.crf().to_string(),
-        "-c:a".to_string(),                  // 오디오 코덱
+        "-c:a".to_string(),         // 오디오 코덱
         "aac".to_string(),
-        "-b:a".to_string(),                  // 오디오 비트레이트
+        "-b:a".to_string(),         // 오디오 비트레이트
         "128k".to_string(),
-        "-movflags".to_string(),             // 웹 재생 최적화
+        "-movflags".to_string(),    // 웹 재생 최적화
         "+faststart".to_string(),
     ];
 
     // 해상도 제한 적용
     if let Some(max_height) = settings.max_height {
-        // 높이를 기준으로 비율 유지하며 축소 (2로 나눠지는 값으로)
         args.push("-vf".to_string());
         args.push(format!(
             "scale=-2:'min({},ih)':flags=lanczos",
@@ -172,14 +213,44 @@ pub fn compress_video(
     // 출력 파일
     args.push(output_path.to_string_lossy().to_string());
 
-    log::info!("Running FFmpeg: {:?} {:?}", ffmpeg_path, args);
+    log::info!("Running FFmpeg with progress: {:?}", ffmpeg_path);
 
-    let output = Command::new(ffmpeg_path)
+    let mut child = Command::new(ffmpeg_path)
         .args(&args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .output()
-        .map_err(|e| format!("Failed to execute FFmpeg: {}", e))?;
+        .spawn()
+        .map_err(|e| format!("Failed to spawn FFmpeg: {}", e))?;
+
+    // stdout에서 진행률 읽기
+    if let Some(stdout) = child.stdout.take() {
+        let reader = BufReader::new(stdout);
+
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                // out_time_ms=1234567 형식 파싱
+                if line.starts_with("out_time_ms=") {
+                    if let Some(time_str) = line.strip_prefix("out_time_ms=") {
+                        if let Ok(time_us) = time_str.parse::<i64>() {
+                            let current_secs = time_us as f64 / 1_000_000.0;
+                            if duration_secs > 0.0 {
+                                let percent = (current_secs / duration_secs * 100.0).min(100.0);
+                                on_progress(percent);
+                            }
+                        }
+                    }
+                }
+                // progress=end 면 완료
+                if line == "progress=end" {
+                    on_progress(100.0);
+                }
+            }
+        }
+    }
+
+    let output = child
+        .wait_with_output()
+        .map_err(|e| format!("Failed to wait for FFmpeg: {}", e))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -209,6 +280,17 @@ pub fn compress_video(
         compressed_size,
         compression_ratio,
     })
+}
+
+/// 영상 압축 실행 (기존 호환성 유지)
+#[allow(dead_code)]
+pub fn compress_video(
+    ffmpeg_path: &Path,
+    input_path: &Path,
+    output_path: &Path,
+    settings: &CompressionSettings,
+) -> Result<CompressionResult, String> {
+    compress_video_with_progress(ffmpeg_path, input_path, output_path, settings, 0.0, |_| {})
 }
 
 /// 임시 압축 파일 경로 생성
