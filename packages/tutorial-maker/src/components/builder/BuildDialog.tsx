@@ -34,7 +34,7 @@ const BuildDialog: React.FC<BuildDialogProps> = ({
   videoCount,
 }) => {
   const [enabled, setEnabled] = useState(false)
-  const [quality, setQuality] = useState<CompressionQuality>('medium')
+  const [quality, setQuality] = useState<CompressionQuality>('high')
   const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined)
 
   if (!isOpen) return null
@@ -94,18 +94,6 @@ const BuildDialog: React.FC<BuildDialogProps> = ({
 
               {enabled && videoCount > 0 && (
                 <div className='space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4'>
-                  {/* FFmpeg 필요 안내 */}
-                  <div className='rounded-lg border border-amber-200 bg-amber-50 p-3'>
-                    <p className='text-sm text-amber-800'>
-                      <span className='font-semibold'>⚠️ FFmpeg 필요:</span> 영상
-                      압축을 사용하려면 FFmpeg가 설치되어 있어야 합니다.
-                    </p>
-                    <p className='mt-1 text-xs text-amber-700'>
-                      시스템 PATH에 FFmpeg를 설치하거나, resources 폴더에
-                      ffmpeg.exe를 넣어주세요.
-                    </p>
-                  </div>
-
                   {/* 품질 설정 */}
                   <div>
                     <label className='mb-2 block text-sm font-medium text-gray-700'>
