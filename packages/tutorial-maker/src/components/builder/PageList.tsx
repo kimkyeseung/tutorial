@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -17,6 +17,7 @@ import { ConfirmDialog, type Page } from '@viswave/shared'
 import {
   getMediaFile,
   createBlobURL,
+  revokeBlobURL,
   generateVideoThumbnail,
 } from '../../utils/mediaStorage'
 import SortablePageItem from './SortablePageItem'
@@ -54,6 +55,9 @@ const PageList: React.FC<PageListProps> = ({
     pageIndex: number
   }>({ isOpen: false, pageId: '', pageIndex: 0 })
 
+  // 썸네일 URL 참조 (cleanup용)
+  const thumbnailsRef = useRef<Record<string, ThumbnailData>>({})
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -65,52 +69,94 @@ const PageList: React.FC<PageListProps> = ({
     })
   )
 
-  // 썸네일 로드
+  // 썸네일 로드 (병렬 처리 + cleanup)
   useEffect(() => {
-    const loadThumbnails = async () => {
-      const newThumbnails: Record<string, ThumbnailData> = {}
+    let isCancelled = false
 
-      for (const page of pages) {
-        const existingThumbnail = thumbnails[page.id]
+    const loadThumbnails = async () => {
+      // 현재 페이지 ID 목록
+      const currentPageIds = new Set(pages.map((p) => p.id))
+
+      // 삭제된 페이지의 썸네일 URL 정리
+      Object.entries(thumbnailsRef.current).forEach(([pageId, thumb]) => {
+        if (!currentPageIds.has(pageId) && thumb.url) {
+          revokeBlobURL(thumb.url)
+        }
+      })
+
+      // 병렬로 새 썸네일 로드
+      const loadPromises = pages.map(async (page) => {
+        const existingThumbnail = thumbnailsRef.current[page.id]
         const needsReload =
           page.mediaId &&
           (!existingThumbnail || existingThumbnail.mediaId !== page.mediaId)
 
-        if (needsReload) {
-          const media = await getMediaFile(page.mediaId)
-          if (media) {
-            let url: string
-            if (page.mediaType === 'image') {
-              // 이미지는 Data URL로 변환 (createBlobURL이 이미 처리함)
-              url = await createBlobURL(media.blob)
-            } else {
-              // 동영상 썸네일 사용
-              if (media.thumbnailBlob) {
-                // 저장된 썸네일이 있으면 사용
-                url = await createBlobURL(media.thumbnailBlob)
-              } else {
-                // 저장된 썸네일이 없으면 실시간으로 생성
-                const thumbnail = await generateVideoThumbnail(media.blob)
-                url = thumbnail ? await createBlobURL(thumbnail) : ''
-              }
-            }
-            newThumbnails[page.id] = {
-              url,
-              mediaType: page.mediaType,
-              fileName: media.name,
-              mediaId: page.mediaId,
-            }
+        if (!needsReload) {
+          return existingThumbnail ? { pageId: page.id, data: existingThumbnail } : null
+        }
+
+        // 기존 URL 정리
+        if (existingThumbnail?.url) {
+          revokeBlobURL(existingThumbnail.url)
+        }
+
+        const media = await getMediaFile(page.mediaId)
+        if (!media || isCancelled) return null
+
+        let url: string
+        if (page.mediaType === 'image') {
+          url = await createBlobURL(media.blob)
+        } else {
+          if (media.thumbnailBlob) {
+            url = await createBlobURL(media.thumbnailBlob)
+          } else {
+            const thumbnail = await generateVideoThumbnail(media.blob)
+            url = thumbnail ? await createBlobURL(thumbnail) : ''
           }
         }
-      }
 
-      if (Object.keys(newThumbnails).length > 0) {
-        setThumbnails((prev) => ({ ...prev, ...newThumbnails }))
-      }
+        return {
+          pageId: page.id,
+          data: {
+            url,
+            mediaType: page.mediaType,
+            fileName: media.name,
+            mediaId: page.mediaId,
+          } as ThumbnailData,
+        }
+      })
+
+      const results = await Promise.all(loadPromises)
+      if (isCancelled) return
+
+      const newThumbnails: Record<string, ThumbnailData> = {}
+      results.forEach((result) => {
+        if (result) {
+          newThumbnails[result.pageId] = result.data
+        }
+      })
+
+      thumbnailsRef.current = newThumbnails
+      setThumbnails(newThumbnails)
     }
 
     loadThumbnails()
+
+    return () => {
+      isCancelled = true
+    }
   }, [pages])
+
+  // 컴포넌트 언마운트 시 모든 썸네일 URL 정리
+  useEffect(() => {
+    return () => {
+      Object.values(thumbnailsRef.current).forEach((thumb) => {
+        if (thumb.url) {
+          revokeBlobURL(thumb.url)
+        }
+      })
+    }
+  }, [])
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -132,7 +178,7 @@ const PageList: React.FC<PageListProps> = ({
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}
         title='페이지 삭제'
-        message={`페이지 ${deleteConfirm.pageIndex + 1}을(를) 삭제하시겠습니까?`}
+        message={'페이지 ' + (deleteConfirm.pageIndex + 1) + '을(를) 삭제하시겠습니까?'}
         confirmText='삭제'
         cancelText='취소'
         onConfirm={() => {
