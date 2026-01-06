@@ -203,3 +203,47 @@ npm run build:maker   # player.exe 임베드
 ```
 - maker는 빌드 시점에 player.exe를 `include_bytes!`로 임베드
 - player가 없거나 오래되면 내보내기 기능 오작동
+
+## Video Compression (영상 압축)
+
+### 개요
+단일 실행파일 내보내기 시 영상 파일을 압축하여 파일 크기를 줄이는 기능.
+FFmpeg를 사용하여 H.264 코덱으로 재인코딩.
+
+### 사용법
+1. "실행 파일 빌드" 버튼 클릭
+2. 빌드 다이얼로그에서 "영상 압축" 토글 활성화
+3. 압축 품질 및 해상도 설정
+4. "빌드 시작" 클릭
+
+### 압축 설정 (CompressionSettings)
+```typescript
+interface CompressionSettings {
+  enabled: boolean           // 압축 활성화 여부
+  quality: 'low' | 'medium' | 'high'  // 압축 품질
+  maxHeight?: number         // 최대 해상도 (높이 기준)
+}
+```
+
+### 품질별 CRF 값
+- **low**: CRF 28, preset "faster" (작은 파일, 낮은 화질)
+- **medium**: CRF 23, preset "medium" (균형, 권장)
+- **high**: CRF 18, preset "slow" (높은 화질, 큰 파일)
+
+### FFmpeg 요구사항
+FFmpeg는 다음 순서로 검색됨:
+1. `resources/ffmpeg.exe` (번들)
+2. `src-tauri/resources/ffmpeg.exe` (개발)
+3. 시스템 PATH
+
+### 관련 파일
+- `packages/tutorial-maker/src-tauri/src/video.rs`: FFmpeg 압축 모듈
+- `packages/tutorial-maker/src/components/builder/BuildDialog.tsx`: 빌드 다이얼로그 UI
+- `packages/shared/src/types/Project.ts`: CompressionSettings 타입
+
+### 압축 흐름
+1. 프론트엔드에서 CompressionSettings와 함께 export_as_executable 호출
+2. Rust 백엔드에서 영상 파일 감지 (video/* MIME type)
+3. FFmpeg로 H.264 재인코딩 (임시 파일)
+4. 압축된 파일을 실행파일에 임베드
+5. 임시 파일 정리
