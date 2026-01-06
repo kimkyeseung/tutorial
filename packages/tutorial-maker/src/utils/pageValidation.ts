@@ -46,8 +46,14 @@ export function validateAllPages(pages: Page[]): {
           errors.push('버튼의 이동 대상 페이지가 설정되지 않았습니다')
         } else {
           const targetIndex = parseInt(button.action.targetPageId)
-          if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= pages.length) {
-            errors.push(`버튼의 이동 대상 페이지가 유효하지 않습니다 (${targetIndex + 1})`)
+          if (
+            isNaN(targetIndex) ||
+            targetIndex < 0 ||
+            targetIndex >= pages.length
+          ) {
+            errors.push(
+              `버튼의 이동 대상 페이지가 유효하지 않습니다 (${targetIndex + 1})`
+            )
           }
         }
       }
@@ -59,8 +65,14 @@ export function validateAllPages(pages: Page[]): {
           errors.push('터치 영역의 이동 대상 페이지가 설정되지 않았습니다')
         } else {
           const targetIndex = parseInt(touchArea.action.targetPageId)
-          if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= pages.length) {
-            errors.push(`터치 영역의 이동 대상 페이지가 유효하지 않습니다 (${targetIndex + 1})`)
+          if (
+            isNaN(targetIndex) ||
+            targetIndex < 0 ||
+            targetIndex >= pages.length
+          ) {
+            errors.push(
+              `터치 영역의 이동 대상 페이지가 유효하지 않습니다 (${targetIndex + 1})`
+            )
           }
         }
       }

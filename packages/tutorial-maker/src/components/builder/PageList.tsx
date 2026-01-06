@@ -61,7 +61,6 @@ const PageList: React.FC<PageListProps> = ({
     })
   )
 
-
   // 썸네일 로드
   useEffect(() => {
     const loadThumbnails = async () => {

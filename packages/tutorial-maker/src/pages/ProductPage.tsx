@@ -1,11 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { save } from '@tauri-apps/plugin-dialog'
-import {
-  ErrorScreen,
-  LoadingScreen,
-  ProductPageContent,
-} from '@viswave/shared'
+import { ErrorScreen, LoadingScreen, ProductPageContent } from '@viswave/shared'
 import { useProductProject } from '../hooks/useProductProject'
 import {
   getProject,
@@ -53,8 +49,14 @@ interface ProductPageProps {
 }
 
 const ProductPage: React.FC<ProductPageProps> = ({ projectId }) => {
-  const { project, mediaUrls, mediaSizes, buttonImageUrls, iconUrl, isLoading } =
-    useProductProject(projectId)
+  const {
+    project,
+    mediaUrls,
+    mediaSizes,
+    buttonImageUrls,
+    iconUrl,
+    isLoading,
+  } = useProductProject(projectId)
   const [isExporting, setIsExporting] = useState(false)
 
   // 실행파일 내보내기

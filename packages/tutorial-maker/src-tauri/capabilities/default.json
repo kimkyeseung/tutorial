@@ -20,6 +20,8 @@
       "identifier": "fs:allow-write-file",
       "allow": [{ "path": "**" }]
     },
-    "fs:default"
+    "fs:default",
+    "shell:allow-open",
+    "shell:allow-execute"
   ]
 }

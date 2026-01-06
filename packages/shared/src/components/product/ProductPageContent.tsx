@@ -1,25 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import type { Project } from '../../types/project'
-import { usePageNavigation } from '../../hooks/usePageNavigation'
-import ConfirmDialog from '../common/ConfirmDialog'
-import ControlOverlay from './ControlOverlay'
-import DebugOverlay from './DebugOverlay'
-import EntryPage from './EntryPage'
-import ErrorScreen from './ErrorScreen'
-import VideoPlayer, { type VideoDebugInfo } from './VideoPlayer'
+import React, { useState, useEffect, useCallback } from "react";
+import type { Project } from "../../types/project";
+import { usePageNavigation } from "../../hooks/usePageNavigation";
+import ConfirmDialog from "../common/ConfirmDialog";
+import ControlOverlay from "./ControlOverlay";
+import DebugOverlay from "./DebugOverlay";
+import EntryPage from "./EntryPage";
+import ErrorScreen from "./ErrorScreen";
+import VideoPlayer, { type VideoDebugInfo } from "./VideoPlayer";
 
 // 프레젠테이션 전용 컴포넌트 (외부에서 데이터 주입)
 export interface ProductPageContentProps {
-  project: Project
-  mediaUrls: Record<string, string>
-  buttonImageUrls: Record<string, string>
-  mediaSizes?: Record<string, number> // 미디어 파일 용량 (bytes)
-  iconUrl?: string // 앱 아이콘 URL (옵션)
-  onExit?: () => void // 종료 시 콜백 (옵션)
-  onExport?: () => void // 실행파일 내보내기 콜백 (옵션)
-  isExporting?: boolean // 내보내기 진행 중 여부 (옵션)
-  emptyMessage?: string // 페이지가 없을 때 메시지 (옵션)
-  skipEntryPage?: boolean // 대문페이지 건너뛰기 (미리보기용)
+  project: Project;
+  mediaUrls: Record<string, string>;
+  buttonImageUrls: Record<string, string>;
+  mediaSizes?: Record<string, number>; // 미디어 파일 용량 (bytes)
+  iconUrl?: string; // 앱 아이콘 URL (옵션)
+  onExit?: () => void; // 종료 시 콜백 (옵션)
+  onExport?: () => void; // 실행파일 내보내기 콜백 (옵션)
+  isExporting?: boolean; // 내보내기 진행 중 여부 (옵션)
+  emptyMessage?: string; // 페이지가 없을 때 메시지 (옵션)
+  skipEntryPage?: boolean; // 대문페이지 건너뛰기 (미리보기용)
 }
 
 export const ProductPageContent: React.FC<ProductPageContentProps> = ({
@@ -31,7 +31,7 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
   onExit,
   onExport,
   isExporting,
-  emptyMessage = '페이지가 없습니다',
+  emptyMessage = "페이지가 없습니다",
   skipEntryPage = false,
 }) => {
   const {
@@ -42,154 +42,161 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
     goToPreviousPage,
     goToHome,
     goToPage,
-  } = usePageNavigation(project)
+  } = usePageNavigation(project);
 
-  const [exitConfirm, setExitConfirm] = useState(false)
-  const [showEntryPage, setShowEntryPage] = useState(!skipEntryPage)
+  const [exitConfirm, setExitConfirm] = useState(false);
+  const [showEntryPage, setShowEntryPage] = useState(!skipEntryPage);
   const [resumePlaybackSignal, setResumePlaybackSignal] = useState(
-    skipEntryPage ? 1 : 0
-  )
+    skipEntryPage ? 1 : 0,
+  );
   // 디버그 모드 (미리보기 전용, 'd' 키로 토글)
-  const [showDebugInfo, setShowDebugInfo] = useState(skipEntryPage)
+  const [showDebugInfo, setShowDebugInfo] = useState(skipEntryPage);
   const [videoDebugInfo, setVideoDebugInfo] = useState<VideoDebugInfo | null>(
-    null
-  )
+    null,
+  );
 
   const handleDebugInfoUpdate = useCallback((info: VideoDebugInfo) => {
-    setVideoDebugInfo(info)
-  }, [])
+    setVideoDebugInfo(info);
+  }, []);
 
   // 전체화면 토글 함수
   const toggleFullscreen = async () => {
     try {
       // Tauri 환경에서는 Tauri window API 사용
-      if ('__TAURI_INTERNALS__' in window) {
-        const { getCurrentWindow } = await import('@tauri-apps/api/window')
-        const appWindow = getCurrentWindow()
-        const isFullscreen = await appWindow.isFullscreen()
-        await appWindow.setFullscreen(!isFullscreen)
+      if ("__TAURI_INTERNALS__" in window) {
+        const { getCurrentWindow } = await import("@tauri-apps/api/window");
+        const appWindow = getCurrentWindow();
+        const isFullscreen = await appWindow.isFullscreen();
+        await appWindow.setFullscreen(!isFullscreen);
       } else {
         // 웹 환경에서는 기존 방식 사용
         if (!document.fullscreenElement) {
-          await document.documentElement.requestFullscreen()
+          await document.documentElement.requestFullscreen();
         } else {
-          await document.exitFullscreen()
+          await document.exitFullscreen();
         }
       }
     } catch (err) {
-      console.error('전체화면 전환 실패:', err)
+      console.error("전체화면 전환 실패:", err);
     }
-  }
+  };
 
   // 종료 처리
   const handleExit = () => {
     if (onExit) {
-      onExit()
+      onExit();
     } else {
-      window.close()
+      window.close();
     }
-  }
+  };
 
   // 키보드 이벤트 처리
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Meta+1 (Mac) 또는 Ctrl+1 (Windows)로 전체화면 토글
-      if ((e.metaKey || e.ctrlKey) && e.key === '1') {
-        e.preventDefault()
-        toggleFullscreen()
-        return
+      if ((e.metaKey || e.ctrlKey) && e.key === "1") {
+        e.preventDefault();
+        toggleFullscreen();
+        return;
       }
 
       // 'd' 키로 디버그 모드 토글 (미리보기 전용)
-      if (skipEntryPage && e.key === 'd') {
-        setShowDebugInfo((prev) => !prev)
-        return
+      if (skipEntryPage && e.key === "d") {
+        setShowDebugInfo((prev) => !prev);
+        return;
       }
 
       // 종료 키 확인
       if (project.settings.exitKey && e.key === project.settings.exitKey) {
-        setExitConfirm(true)
-        return
+        setExitConfirm(true);
+        return;
       }
 
       // 화살표 키 네비게이션
-      if (e.key === 'ArrowRight') {
-        goToNextPage()
-      } else if (e.key === 'ArrowLeft') {
-        goToPreviousPage()
-      } else if (e.key === 'Home') {
-        goToHome()
+      if (e.key === "ArrowRight") {
+        goToNextPage();
+      } else if (e.key === "ArrowLeft") {
+        goToPreviousPage();
+      } else if (e.key === "Home") {
+        goToHome();
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [project, currentPageIndex, goToNextPage, goToPreviousPage, goToHome, skipEntryPage])
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [
+    project,
+    currentPageIndex,
+    goToNextPage,
+    goToPreviousPage,
+    goToHome,
+    skipEntryPage,
+  ]);
 
   const handleVideoEnd = () => {
     // 단일 재생 모드일 때만 자동으로 다음 페이지로
-    if (project.pages[currentPageIndex]?.playType === 'single') {
-      goToNextPage()
+    if (project.pages[currentPageIndex]?.playType === "single") {
+      goToNextPage();
     }
-  }
+  };
 
   const handleButtonClick = (buttonId: string) => {
-    const page = project.pages[currentPageIndex]
-    const button = page.buttons.find((b) => b.id === buttonId)
+    const page = project.pages[currentPageIndex];
+    const button = page.buttons.find((b) => b.id === buttonId);
 
-    if (!button) return
+    if (!button) return;
 
-    if (button.action.type === 'next') {
-      goToNextPage()
+    if (button.action.type === "next") {
+      goToNextPage();
     } else if (
-      button.action.type === 'goto' &&
+      button.action.type === "goto" &&
       button.action.targetPageId !== undefined
     ) {
-      const targetIndex = parseInt(button.action.targetPageId)
-      goToPage(targetIndex)
+      const targetIndex = parseInt(button.action.targetPageId);
+      goToPage(targetIndex);
     }
-  }
+  };
 
   const handleTouchAreaClick = (touchAreaId: string) => {
-    const page = project.pages[currentPageIndex]
-    const touchArea = page.touchAreas.find((t) => t.id === touchAreaId)
+    const page = project.pages[currentPageIndex];
+    const touchArea = page.touchAreas.find((t) => t.id === touchAreaId);
 
-    if (!touchArea) return
+    if (!touchArea) return;
 
-    if (touchArea.action.type === 'next') {
-      goToNextPage()
+    if (touchArea.action.type === "next") {
+      goToNextPage();
     } else if (
-      touchArea.action.type === 'goto' &&
+      touchArea.action.type === "goto" &&
       touchArea.action.targetPageId !== undefined
     ) {
-      const targetIndex = parseInt(touchArea.action.targetPageId)
-      goToPage(targetIndex)
+      const targetIndex = parseInt(touchArea.action.targetPageId);
+      goToPage(targetIndex);
     }
-  }
+  };
 
   const handleStartClick = () => {
-    setShowEntryPage(false)
+    setShowEntryPage(false);
     // 사용자 클릭 이후 재생 재시도를 위해 신호 증가
-    setResumePlaybackSignal((prev) => prev + 1)
-  }
+    setResumePlaybackSignal((prev) => prev + 1);
+  };
 
   // 페이지 없음
   if (project.pages.length === 0) {
-    return <ErrorScreen title='페이지가 없습니다' message={emptyMessage} />
+    return <ErrorScreen title="페이지가 없습니다" message={emptyMessage} />;
   }
 
   return (
-    <div className='relative h-screen w-screen overflow-hidden bg-black'>
+    <div className="relative h-screen w-screen overflow-hidden bg-black">
       {/* 종료 확인 다이얼로그 */}
       <ConfirmDialog
         isOpen={exitConfirm}
-        title='앱 종료'
-        message='앱을 종료하시겠습니까?'
-        confirmText='종료'
-        cancelText='취소'
+        title="앱 종료"
+        message="앱을 종료하시겠습니까?"
+        confirmText="종료"
+        cancelText="취소"
         onConfirm={handleExit}
         onCancel={() => setExitConfirm(false)}
-        variant='warning'
+        variant="warning"
       />
 
       {/* 입구 페이지 */}
@@ -206,20 +213,20 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
       {/* 마운트된 모든 페이지 렌더링 (프리로딩) */}
       {!showEntryPage &&
         Array.from(mountedPages).map((pageIndex) => {
-          const page = project.pages[pageIndex]
-          const mediaUrl = page?.mediaId ? mediaUrls[page.mediaId] : null
-          const isCurrentPage = pageIndex === currentPageIndex
+          const page = project.pages[pageIndex];
+          const mediaUrl = page?.mediaId ? mediaUrls[page.mediaId] : null;
+          const isCurrentPage = pageIndex === currentPageIndex;
 
-          if (!page || !mediaUrl) return null
+          if (!page || !mediaUrl) return null;
 
           return (
             <div
               key={page.id}
-              className='absolute inset-0'
+              className="absolute inset-0"
               style={{
                 zIndex: isCurrentPage ? 10 : 1,
                 opacity: isCurrentPage ? 1 : 0,
-                pointerEvents: isCurrentPage ? 'auto' : 'none',
+                pointerEvents: isCurrentPage ? "auto" : "none",
               }}
             >
               <VideoPlayer
@@ -240,13 +247,13 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
                 totalPages={project.pages.length}
               />
             </div>
-          )
+          );
         })}
 
       {/* 미디어 로드 실패 시 */}
       {!showEntryPage &&
-      (!currentPage || !mediaUrls[currentPage?.mediaId || '']) ? (
-        <div className='absolute inset-0 z-20 flex h-full w-full items-center justify-center text-white'>
+      (!currentPage || !mediaUrls[currentPage?.mediaId || ""]) ? (
+        <div className="absolute inset-0 z-20 flex h-full w-full items-center justify-center text-white">
           <p>미디어를 로드할 수 없습니다</p>
         </div>
       ) : null}
@@ -269,9 +276,11 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
           pageIndex={currentPageIndex}
           totalPages={project.pages.length}
           videoDebugInfo={videoDebugInfo}
-          mediaSize={currentPage.mediaId ? mediaSizes[currentPage.mediaId] : undefined}
+          mediaSize={
+            currentPage.mediaId ? mediaSizes[currentPage.mediaId] : undefined
+          }
         />
       )}
     </div>
-  )
-}
+  );
+};

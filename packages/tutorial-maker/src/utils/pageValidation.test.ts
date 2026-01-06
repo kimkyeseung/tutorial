@@ -1,6 +1,6 @@
+import type { Page, PageButton, TouchArea } from '@viswave/shared'
 import { describe, it, expect } from 'vitest'
 import { validatePage, validateAllPages } from './pageValidation'
-import type { Page, PageButton, TouchArea } from '@viswave/shared'
 
 // Test fixtures
 const createBasePage = (overrides: Partial<Page> = {}): Page => ({

@@ -1,12 +1,12 @@
 // Types
-export * from './types/project'
+export * from "./types/project";
 
 // Hooks
-export { usePageNavigation } from './hooks/usePageNavigation'
-export { useTutorialViewer } from './hooks/useTutorialViewer'
+export { usePageNavigation } from "./hooks/usePageNavigation";
+export { useTutorialViewer } from "./hooks/useTutorialViewer";
 
 // Common Components
-export { Footer, ConfirmDialog } from './components/common'
+export { Footer, ConfirmDialog } from "./components/common";
 
 // Product Components
 export {
@@ -18,8 +18,8 @@ export {
   LoadingScreen,
   ErrorScreen,
   ProductPageContent,
-} from './components/product'
-export type { ProductPageContentProps } from './components/product'
+} from "./components/product";
+export type { ProductPageContentProps } from "./components/product";
 
 // Utils
 export {
@@ -27,10 +27,10 @@ export {
   loadTutorialFromFile,
   createMediaUrls,
   revokeMediaUrls,
-} from './utils/tutorialLoader'
+} from "./utils/tutorialLoader";
 export {
   createRecentFilesManager,
   makerRecentFiles,
   viewerRecentFiles,
   type RecentFile,
-} from './utils/recentFiles'
+} from "./utils/recentFiles";
