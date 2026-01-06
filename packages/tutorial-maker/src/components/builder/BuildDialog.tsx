@@ -1,5 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import type { CompressionSettings, CompressionQuality } from '@viswave/shared'
+
+interface BuildProgress {
+  current: number
+  total: number
+  percent: number
+  fileName: string
+  stage: string
+}
 
 interface BuildDialogProps {
   isOpen: boolean
@@ -15,8 +24,8 @@ const QUALITY_OPTIONS: {
   description: string
 }[] = [
   { value: 'low', label: '저용량', description: '작은 파일 크기, 낮은 화질' },
-  { value: 'medium', label: '균형', description: '적당한 크기와 화질 (권장)' },
-  { value: 'high', label: '고품질', description: '높은 화질, 큰 파일 크기' },
+  { value: 'medium', label: '균형', description: '적당한 크기와 화질' },
+  { value: 'high', label: '고품질', description: '높은 화질, 큰 파일 크기 (권장)' },
 ]
 
 const RESOLUTION_OPTIONS: { value: number | undefined; label: string }[] = [
@@ -36,10 +45,35 @@ const BuildDialog: React.FC<BuildDialogProps> = ({
   const [enabled, setEnabled] = useState(false)
   const [quality, setQuality] = useState<CompressionQuality>('high')
   const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined)
+  const [progress, setProgress] = useState<BuildProgress | null>(null)
+
+  // 빌드 진행 상황 이벤트 리스너
+  useEffect(() => {
+    let unlisten: UnlistenFn | null = null
+
+    if (isBuilding && enabled) {
+      listen<BuildProgress>('build-progress', (event) => {
+        setProgress(event.payload)
+      }).then((fn) => {
+        unlisten = fn
+      })
+    }
+
+    return () => {
+      if (unlisten) {
+        unlisten()
+      }
+      // 빌드가 끝나면 진행 상황 초기화
+      if (!isBuilding) {
+        setProgress(null)
+      }
+    }
+  }, [isBuilding, enabled])
 
   if (!isOpen) return null
 
   const handleBuild = () => {
+    setProgress(null)
     onBuild({
       enabled,
       quality,
@@ -53,18 +87,52 @@ const BuildDialog: React.FC<BuildDialogProps> = ({
         <h2 className='mb-4 text-xl font-bold text-gray-900'>실행 파일 빌드</h2>
 
         {isBuilding ? (
-          <div className='py-8 text-center'>
-            <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600'></div>
-            <h3 className='mb-2 text-lg font-semibold'>빌드 중...</h3>
-            <p className='text-sm text-gray-600'>
-              {enabled
-                ? '영상을 압축하고 실행 파일을 생성하고 있습니다.'
-                : '실행 파일을 생성하고 있습니다.'}
-            </p>
-            {enabled && (
-              <p className='mt-2 text-xs text-gray-500'>
-                영상 압축은 시간이 걸릴 수 있습니다.
-              </p>
+          <div className='py-6'>
+            <h3 className='mb-4 text-center text-lg font-semibold'>빌드 중...</h3>
+
+            {/* 진행 상황 표시 (압축 활성화 시) */}
+            {enabled && progress ? (
+              <div className='space-y-3'>
+                {/* 프로그레스바 */}
+                <div className='h-4 w-full overflow-hidden rounded-full bg-gray-200'>
+                  <div
+                    className='h-full rounded-full bg-purple-600 transition-all duration-300'
+                    style={{ width: `${progress.percent}%` }}
+                  />
+                </div>
+
+                {/* 진행 상황 텍스트 */}
+                <div className='flex items-center justify-between text-sm'>
+                  <span className='font-medium text-gray-700'>
+                    {progress.current}/{progress.total}
+                  </span>
+                  <span className='font-bold text-purple-600'>
+                    {progress.percent.toFixed(2)}%
+                  </span>
+                </div>
+
+                {/* 현재 파일명 */}
+                <p className='truncate text-center text-sm text-gray-500'>
+                  압축 중: {progress.fileName}
+                </p>
+              </div>
+            ) : enabled ? (
+              <div className='space-y-3'>
+                {/* 대기 중 프로그레스바 */}
+                <div className='h-4 w-full overflow-hidden rounded-full bg-gray-200'>
+                  <div className='h-full w-full animate-pulse rounded-full bg-purple-300' />
+                </div>
+                <p className='text-center text-sm text-gray-500'>
+                  영상 압축을 준비하고 있습니다...
+                </p>
+              </div>
+            ) : (
+              <div className='text-center'>
+                <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600'></div>
+                <p className='text-sm text-gray-600'>
+                  실행 파일을 생성하고 있습니다.
+                </p>
+              </div>
             )}
           </div>
         ) : (

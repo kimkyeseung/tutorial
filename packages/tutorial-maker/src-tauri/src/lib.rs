@@ -4,13 +4,29 @@ mod video;
 
 use embedded::{append_embedded_data, prepare_base_executable, MediaSource};
 use icon::{convert_to_ico, set_exe_icon};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use video::{
     compress_video, find_ffmpeg_path, get_temp_compressed_path, is_video_file,
     CompressionSettings,
 };
+
+/// 빌드 진행 상황 이벤트
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct BuildProgress {
+    /// 현재 처리 중인 파일 인덱스 (1-based)
+    current: usize,
+    /// 전체 파일 수
+    total: usize,
+    /// 진행률 (0.0 ~ 100.0)
+    percent: f64,
+    /// 현재 처리 중인 파일명
+    file_name: String,
+    /// 현재 단계
+    stage: String,
+}
 
 /// Export 요청 데이터
 /// 대용량 파일은 path로, 소용량 파일은 data로 전달
@@ -84,19 +100,49 @@ fn export_as_executable(app: tauri::AppHandle, request: ExportRequest) -> Result
     // 압축된 파일 경로 추적 (정리용)
     let mut compressed_temp_files: Vec<String> = Vec::new();
 
+    // 영상 파일 수 계산 (진행률 표시용)
+    let total_videos = if compression_enabled {
+        request
+            .media_files
+            .iter()
+            .filter(|f| is_video_file(&f.mime_type))
+            .count()
+    } else {
+        0
+    };
+
     // 미디어 파일 처리 (압축 적용)
-    let media_files: Vec<_> = request
-        .media_files
-        .into_iter()
-        .map(|file| {
-            process_media_file_for_export(
-                file,
-                &request.compression,
-                &ffmpeg_path,
-                &mut compressed_temp_files,
-            )
-        })
-        .collect::<Result<Vec<_>, String>>()?;
+    let mut processed_count = 0usize;
+    let mut media_files: Vec<(String, String, String, MediaSource)> = Vec::new();
+
+    for file in request.media_files {
+        let is_video = is_video_file(&file.mime_type);
+        let file_name = file.name.clone();
+
+        // 진행 상황 emit (영상 압축 시에만)
+        if compression_enabled && is_video {
+            processed_count += 1;
+            let percent = (processed_count as f64 / total_videos as f64) * 100.0;
+            let _ = app.emit(
+                "build-progress",
+                BuildProgress {
+                    current: processed_count,
+                    total: total_videos,
+                    percent,
+                    file_name: file_name.clone(),
+                    stage: "compressing".to_string(),
+                },
+            );
+        }
+
+        let result = process_media_file_for_export(
+            file,
+            &request.compression,
+            &ffmpeg_path,
+            &mut compressed_temp_files,
+        )?;
+        media_files.push(result);
+    }
 
     let button_files: Vec<_> = request
         .button_files
