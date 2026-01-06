@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import {
@@ -66,6 +66,13 @@ function App() {
   const [embeddedIconUrl, setEmbeddedIconUrl] = useState<string | undefined>()
   const [embeddedError, setEmbeddedError] = useState<string | null>(null)
 
+  // URL 참조를 ref로 유지 (cleanup 시 stale closure 방지)
+  const urlsRef = useRef({
+    mediaUrls: {} as Record<string, string>,
+    buttonUrls: {} as Record<string, string>,
+    iconUrl: undefined as string | undefined,
+  })
+
   // 임베딩 데이터 확인 및 로드
   useEffect(() => {
     const checkEmbeddedData = async () => {
@@ -96,6 +103,7 @@ function App() {
             mediaUrls[media.id] = URL.createObjectURL(blob)
           }
           setEmbeddedMediaUrls(mediaUrls)
+          urlsRef.current.mediaUrls = mediaUrls
 
           // 버튼 이미지 URL 생성
           const buttonUrls: Record<string, string> = {}
@@ -109,6 +117,7 @@ function App() {
             buttonUrls[button.id] = URL.createObjectURL(blob)
           }
           setEmbeddedButtonUrls(buttonUrls)
+          urlsRef.current.buttonUrls = buttonUrls
 
           // 앱 아이콘 로드 및 파비콘 설정
           if (info.manifest.appIconOffset && info.manifest.appIconSize) {
@@ -121,6 +130,7 @@ function App() {
               })
               const iconUrl = URL.createObjectURL(blob)
               setEmbeddedIconUrl(iconUrl)
+              urlsRef.current.iconUrl = iconUrl
 
               // 파비콘도 설정
               setFavicon(iconUrl)
@@ -169,14 +179,15 @@ function App() {
     checkCliArgs()
   }, [isEmbeddedMode])
 
-  // URL 정리
+  // URL 정리 (ref를 사용하여 현재 값으로 cleanup)
   useEffect(() => {
     return () => {
-      Object.values(embeddedMediaUrls).forEach(URL.revokeObjectURL)
-      Object.values(embeddedButtonUrls).forEach(URL.revokeObjectURL)
-      if (embeddedIconUrl) URL.revokeObjectURL(embeddedIconUrl)
+      const { mediaUrls, buttonUrls, iconUrl } = urlsRef.current
+      Object.values(mediaUrls).forEach(URL.revokeObjectURL)
+      Object.values(buttonUrls).forEach(URL.revokeObjectURL)
+      if (iconUrl) URL.revokeObjectURL(iconUrl)
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleFileSelect = (path: string) => {
     setFilePath(path)
