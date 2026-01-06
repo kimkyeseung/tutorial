@@ -4,6 +4,7 @@ import {
   saveButtonImage,
   getButtonImage,
   createBlobURL,
+  revokeBlobURL,
 } from '../../utils/mediaStorage'
 
 type InteractionEditorProps = {
@@ -36,15 +37,19 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
   const containerRef = useRef<HTMLDivElement>(null)
   const [buttonImages, setButtonImages] = useState<Record<string, string>>({})
 
+  // 버튼 이미지 URL 참조 (cleanup용)
+  const buttonImagesRef = useRef<Record<string, string>>({})
+
   // 버튼 이미지 로드
   const loadButtonImage = async (imageId: string) => {
     const image = await getButtonImage(imageId)
     if (image) {
       const url = await createBlobURL(image.blob)
-      setButtonImages((prev) => ({
-        ...prev,
-        [imageId]: url,
-      }))
+      setButtonImages((prev) => {
+        const newImages = { ...prev, [imageId]: url }
+        buttonImagesRef.current = newImages
+        return newImages
+      })
     }
   }
 
@@ -55,6 +60,17 @@ const InteractionEditor: React.FC<InteractionEditorProps> = ({
       }
     })
   }, [buttons])
+
+  // 컴포넌트 언마운트 시 모든 버튼 이미지 URL 정리
+  useEffect(() => {
+    return () => {
+      Object.values(buttonImagesRef.current).forEach((url) => {
+        if (url) {
+          revokeBlobURL(url)
+        }
+      })
+    }
+  }, [])
 
   // 버튼 추가
   const handleAddButton = async () => {
