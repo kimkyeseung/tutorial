@@ -133,53 +133,58 @@ export const ProductPageContent: React.FC<ProductPageContentProps> = ({
     skipEntryPage,
   ]);
 
-  const handleVideoEnd = () => {
+  const handleVideoEnd = useCallback(() => {
     // 단일 재생 모드일 때만 자동으로 다음 페이지로
     if (project.pages[currentPageIndex]?.playType === "single") {
       goToNextPage();
     }
-  };
+  }, [project.pages, currentPageIndex, goToNextPage]);
 
-  const handleButtonClick = (buttonId: string) => {
-    const page = project.pages[currentPageIndex];
-    const button = page.buttons.find((b) => b.id === buttonId);
+  const handleButtonClick = useCallback(
+    (buttonId: string) => {
+      const page = project.pages[currentPageIndex];
+      const button = page.buttons.find((b) => b.id === buttonId);
 
-    if (!button) return;
+      if (!button) return;
 
-    if (button.action.type === "next") {
-      goToNextPage();
-    } else if (
-      button.action.type === "goto" &&
-      button.action.targetPageId !== undefined
-    ) {
-      const targetIndex = parseInt(button.action.targetPageId);
-      goToPage(targetIndex);
-    }
-  };
+      if (button.action.type === "next") {
+        goToNextPage();
+      } else if (
+        button.action.type === "goto" &&
+        button.action.targetPageId !== undefined
+      ) {
+        const targetIndex = parseInt(button.action.targetPageId);
+        goToPage(targetIndex);
+      }
+    },
+    [project.pages, currentPageIndex, goToNextPage, goToPage],
+  );
 
-  const handleTouchAreaClick = (touchAreaId: string) => {
-    const page = project.pages[currentPageIndex];
-    const touchArea = page.touchAreas.find((t) => t.id === touchAreaId);
+  const handleTouchAreaClick = useCallback(
+    (touchAreaId: string) => {
+      const page = project.pages[currentPageIndex];
+      const touchArea = page.touchAreas.find((t) => t.id === touchAreaId);
 
-    if (!touchArea) return;
+      if (!touchArea) return;
 
-    if (touchArea.action.type === "next") {
-      goToNextPage();
-    } else if (
-      touchArea.action.type === "goto" &&
-      touchArea.action.targetPageId !== undefined
-    ) {
-      const targetIndex = parseInt(touchArea.action.targetPageId);
-      goToPage(targetIndex);
-    }
-  };
+      if (touchArea.action.type === "next") {
+        goToNextPage();
+      } else if (
+        touchArea.action.type === "goto" &&
+        touchArea.action.targetPageId !== undefined
+      ) {
+        const targetIndex = parseInt(touchArea.action.targetPageId);
+        goToPage(targetIndex);
+      }
+    },
+    [project.pages, currentPageIndex, goToNextPage, goToPage],
+  );
 
-  const handleStartClick = () => {
+  const handleStartClick = useCallback(() => {
     setShowEntryPage(false);
     // 사용자 클릭 이후 재생 재시도를 위해 신호 증가
     setResumePlaybackSignal((prev) => prev + 1);
-  };
-
+  }, []);
   // 페이지 없음
   if (project.pages.length === 0) {
     return <ErrorScreen title="페이지가 없습니다" message={emptyMessage} />;
