@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { save } from '@tauri-apps/plugin-dialog'
+import {
+  ConfirmDialog,
+  type Project,
+  type Page,
+  type CompressionSettings,
+} from '@viswave/shared'
+import BuildDialog from '../components/builder/BuildDialog'
 import FlowMap from '../components/builder/FlowMap'
 import PageEditor from '../components/builder/PageEditor'
 import PageList from '../components/builder/PageList'
 import ProjectSettings from '../components/builder/ProjectSettings'
-import { ConfirmDialog, type Project, type Page } from '@viswave/shared'
 import {
   getAllProjects,
   saveProject,
@@ -48,6 +54,7 @@ interface ExportRequest {
   mediaFiles: ExportMediaFile[]
   buttonFiles: ExportMediaFile[]
   appIcon: number[] | null
+  compression?: CompressionSettings
 }
 
 type View = 'list' | 'settings' | 'pages'
@@ -73,6 +80,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
   }>({ isOpen: false, projectId: '', projectName: '' })
   const [unsavedChangesConfirm, setUnsavedChangesConfirm] = useState(false)
   const [previewConfirm, setPreviewConfirm] = useState(false)
+  const [buildDialogOpen, setBuildDialogOpen] = useState(false)
 
   useEffect(() => {
     loadProjects()
@@ -235,30 +243,37 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
     }
   }
 
+  // 빌드 다이얼로그 열기
+  const handleBuildClick = async () => {
+    if (!selectedProject) return
+
+    if (selectedProject.pages.length === 0) {
+      alert('빌드할 수 없습니다. 페이지가 없습니다.')
+      return
+    }
+
+    const validation = validateAllPages(selectedProject.pages)
+    if (!validation.isValid) {
+      const errorMessages = validation.invalidPages
+        .map(
+          ({ pageIndex, errors }) =>
+            `페이지 ${pageIndex + 1}: ${errors.join(', ')}`
+        )
+        .join(', ')
+      alert(`빌드할 수 없습니다. ${errorMessages}`)
+      return
+    }
+
+    await saveProject(selectedProject)
+    setBuildDialogOpen(true)
+  }
+
   // 실행 파일 빌드
-  const handleBuild = async () => {
+  const handleBuild = async (compression: CompressionSettings) => {
     if (!selectedProject) return
     setIsBuilding(true)
 
     try {
-      if (selectedProject.pages.length === 0) {
-        alert('빌드할 수 없습니다. 페이지가 없습니다.')
-        setIsBuilding(false)
-        return
-      }
-
-      const validation = validateAllPages(selectedProject.pages)
-      if (!validation.isValid) {
-        const errorMessages = validation.invalidPages
-          .map(({ pageIndex, errors }) => `페이지 ${pageIndex + 1}: ${errors.join(', ')}`)
-          .join(', ')
-        alert(`빌드할 수 없습니다. ${errorMessages}`)
-        setIsBuilding(false)
-        return
-      }
-
-      await saveProject(selectedProject)
-
       const outputPath = await save({
         defaultPath: `${selectedProject.appTitle || selectedProject.name}.exe`,
         filters: [{ name: 'Executable', extensions: ['exe'] }],
@@ -347,9 +362,11 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
         mediaFiles,
         buttonFiles,
         appIcon,
+        compression,
       }
 
       await invoke('export_as_executable', { request })
+      setBuildDialogOpen(false)
       alert(`실행파일이 생성되었습니다: ${outputPath}`)
     } catch (error) {
       console.error('Build failed:', error)
@@ -358,6 +375,12 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
       setIsBuilding(false)
     }
   }
+
+  // 영상 파일 개수 계산
+  const videoCount = selectedProject
+    ? selectedProject.pages.filter((p) => p.mediaType === 'video' && p.mediaId)
+        .length
+    : 0
 
   // 페이지 관리 함수들
   const handleAddPage = () => {
@@ -483,7 +506,9 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
       <ConfirmDialog
         isOpen={previewConfirm}
         title='저장되지 않은 변경사항'
-        message={'저장되지 않은 변경사항이 있습니다.\n저장 후 미리보기하시겠습니까?'}
+        message={
+          '저장되지 않은 변경사항이 있습니다.\n저장 후 미리보기하시겠습니까?'
+        }
         confirmText='저장 후 미리보기'
         cancelText='저장 안 하고 미리보기'
         onConfirm={confirmSaveAndPreview}
@@ -515,15 +540,14 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
         </div>
       </header>
 
-      {/* 빌드 진행 중 표시 */}
-      {isBuilding && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
-          <div className='mx-4 w-full max-w-md rounded-lg bg-white p-8 text-center'>
-            <h3 className='mb-2 text-xl font-bold'>빌드 중...</h3>
-            <p className='text-sm text-gray-600'>잠시만 기다려주세요</p>
-          </div>
-        </div>
-      )}
+      {/* 빌드 다이얼로그 */}
+      <BuildDialog
+        isOpen={buildDialogOpen}
+        onClose={() => setBuildDialogOpen(false)}
+        onBuild={handleBuild}
+        isBuilding={isBuilding}
+        videoCount={videoCount}
+      />
 
       {/* 메인 콘텐츠 */}
       <main className='mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8'>
@@ -627,7 +651,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                   </button>
                 )}
                 <button
-                  onClick={handleBuild}
+                  onClick={handleBuildClick}
                   disabled={isBuilding}
                   className='flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50'
                 >
@@ -693,7 +717,7 @@ const BuilderPage: React.FC<BuilderPageProps> = ({ onPreview }) => {
                   </button>
                 )}
                 <button
-                  onClick={handleBuild}
+                  onClick={handleBuildClick}
                   disabled={isBuilding}
                   className='flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50'
                 >
