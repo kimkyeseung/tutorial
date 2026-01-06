@@ -1,12 +1,30 @@
 import { useState, useEffect } from 'react'
 import { invoke } from '@tauri-apps/api/core'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import {
   ProductPageContent,
   LoadingScreen,
   ErrorScreen,
+  setFavicon,
+  setDocumentTitle,
   type Project,
 } from '@viswave/shared'
 import ViewerPage from './pages/ViewerPage'
+
+/**
+ * 윈도우 타이틀 설정 (HTML + Tauri 윈도우)
+ */
+async function setWindowTitle(title: string) {
+  // HTML 문서 타이틀 설정
+  setDocumentTitle(title)
+
+  // Tauri 윈도우 타이틀 설정
+  try {
+    await getCurrentWindow().setTitle(title)
+  } catch (err) {
+    console.warn('Failed to set window title:', err)
+  }
+}
 
 // 임베딩 정보 타입
 interface EmbeddedInfo {
@@ -60,6 +78,12 @@ function App() {
           const project: Project = JSON.parse(projectJson)
           setEmbeddedProject(project)
 
+          // 윈도우 타이틀 설정 (앱 타이틀 또는 프로젝트 이름)
+          const title = project.appTitle || project.name
+          if (title) {
+            setWindowTitle(title)
+          }
+
           // 미디어 URL 생성
           const mediaUrls: Record<string, string> = {}
           for (const media of info.manifest.media) {
@@ -86,7 +110,7 @@ function App() {
           }
           setEmbeddedButtonUrls(buttonUrls)
 
-          // 앱 아이콘 로드
+          // 앱 아이콘 로드 및 파비콘 설정
           if (info.manifest.appIconOffset && info.manifest.appIconSize) {
             const iconData = await invoke<number[] | null>(
               'get_embedded_app_icon'
@@ -95,7 +119,11 @@ function App() {
               const blob = new Blob([new Uint8Array(iconData)], {
                 type: 'image/png',
               })
-              setEmbeddedIconUrl(URL.createObjectURL(blob))
+              const iconUrl = URL.createObjectURL(blob)
+              setEmbeddedIconUrl(iconUrl)
+
+              // 파비콘도 설정
+              setFavicon(iconUrl)
             }
           }
 
@@ -161,9 +189,7 @@ function App() {
 
   // 임베딩 모드 에러
   if (embeddedError) {
-    return (
-      <ErrorScreen title='로드 실패' message={embeddedError} />
-    )
+    return <ErrorScreen title='로드 실패' message={embeddedError} />
   }
 
   // 임베딩 모드: 바로 튜토리얼 재생

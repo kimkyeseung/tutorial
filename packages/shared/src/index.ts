@@ -34,3 +34,4 @@ export {
   viewerRecentFiles,
   type RecentFile,
 } from "./utils/recentFiles";
+export { setFavicon, setDocumentTitle } from "./utils/windowUtils";
